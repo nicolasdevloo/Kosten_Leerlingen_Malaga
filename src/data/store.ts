@@ -29,6 +29,7 @@ interface AppState {
   updateStagePeriod: (stageId: string, startDatum: string | null, aantalDagen: number) => void
   importStudents: (stageId: string, klas: KlasCode, namen: string[]) => Student[]
   regenerateToken: (studentId: string) => string
+  deleteStudent: (studentId: string) => void
 }
 
 export const useStore = create<AppState>()(
@@ -141,6 +142,20 @@ export const useStore = create<AppState>()(
           return { students: { ...state.students, [studentId]: { ...s, token, linkGeopend: false } } }
         })
         return token
+      },
+
+      deleteStudent: (studentId) => {
+        set((state) => {
+          const deletedStudent = state.students[studentId]
+          if (!deletedStudent) return state
+          const students = { ...state.students }
+          delete students[studentId]
+          const receipts = Object.fromEntries(
+            Object.entries(state.receipts).filter(([, r]) => r.studentId !== studentId)
+          )
+          const sessionToken = state.sessionToken === deletedStudent.token ? null : state.sessionToken
+          return { students, receipts, sessionToken }
+        })
       }
     }),
     {

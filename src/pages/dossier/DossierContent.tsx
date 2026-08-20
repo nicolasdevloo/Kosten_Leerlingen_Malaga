@@ -23,7 +23,7 @@ export function DossierContent({ student, stage, receipts }: { student: Student;
       <div className="flex justify-between items-baseline gap-6 border-b border-black/[.18] pb-2 mb-1.5 text-[8.5pt] text-black/55">
         <span>Kostendossier buitenlandse stage · Erasmus+</span>
         <span>
-          {student.naam} · {student.klas} · {stage.bestemming} {periode}
+          {student.naam} · {student.klas} · {stage.bestemming}, {periode}
         </span>
       </div>
 

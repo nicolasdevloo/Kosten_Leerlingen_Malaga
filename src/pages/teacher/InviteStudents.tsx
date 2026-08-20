@@ -20,16 +20,18 @@ export function InviteStudents() {
   const updateStagePeriod = useStore((s) => s.updateStagePeriod)
   const importStudents = useStore((s) => s.importStudents)
   const regenerateToken = useStore((s) => s.regenerateToken)
+  const deleteStudent = useStore((s) => s.deleteStudent)
   const allInStage = useStore((s) => classStudents(s, stage?.id ?? ''))
 
   const [klas, setKlas] = useState<KlasCode>('6AD')
+  const [quickName, setQuickName] = useState('')
   const [paste, setPaste] = useState('')
-  const [forceForm, setForceForm] = useState(false)
+  const [showPaste, setShowPaste] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const klasStudents = useMemo(() => allInStage.filter((s) => s.klas === klas), [allInStage, klas])
-  const showTable = klasStudents.length > 0 && !forceForm
+  const hasStudents = klasStudents.length > 0
 
   if (!stage) return null
 
@@ -51,7 +53,20 @@ export function InviteStudents() {
     if (namesToImport.length === 0) return
     importStudents(stage.id, klas, namesToImport)
     setPaste('')
-    setForceForm(false)
+    setShowPaste(false)
+  }
+
+  const addOne = () => {
+    const naam = quickName.trim()
+    if (!naam) return
+    importStudents(stage.id, klas, [naam])
+    setQuickName('')
+  }
+
+  const remove = (studentId: string, naam: string) => {
+    if (window.confirm(`${naam} verwijderen? Zijn bonnetjes en link verdwijnen mee. Dit kan niet ongedaan gemaakt worden.`)) {
+      deleteStudent(studentId)
+    }
   }
 
   const end = stage.startDatum ? stageEndDate(stage.startDatum, stage.aantalDagen) : null
@@ -72,7 +87,7 @@ export function InviteStudents() {
       </div>
 
       <div className="flex-1 overflow-auto px-8 py-[26px] flex gap-7">
-        <div className={showTable ? 'flex-1 min-w-0 flex flex-col gap-3.5' : 'flex-[1.3] min-w-0 flex flex-col gap-3.5'}>
+        <div className={hasStudents ? 'flex-1 min-w-0 flex flex-col gap-3.5' : 'flex-[1.3] min-w-0 flex flex-col gap-3.5'}>
           <div className="text-[15px] font-bold">1 · Zet de stageperiode vast</div>
           <div className="bg-white rounded-md border border-black/[.12] px-[18px] py-4 flex flex-col gap-3.5">
             <div className="flex gap-[18px] flex-wrap items-end">
@@ -120,63 +135,29 @@ export function InviteStudents() {
             ))}
           </div>
 
-          {showTable ? (
-            <>
-              <div className="flex gap-2.5 items-center flex-wrap mt-2">
-                <div className="text-[13px] text-black/55">
-                  {opened} van de {klasStudents.length} leerlingen hebben hun link al geopend. {klasStudents.length - opened} nog niet.
-                  {stage.startDatum ? ` Periode: ${formatShortDate(stage.startDatum)} – ${end ? formatShortDateYear(end) : ''}.` : ' Periode nog niet vastgelegd.'}
-                </div>
-                <div className="flex-1" />
-                <button
-                  onClick={() => setForceForm(true)}
-                  className="border border-black/[.14] bg-white rounded-[11px] px-4 py-2.5 text-[13px] font-semibold"
-                >
-                  Periode of klas aanpassen
-                </button>
-              </div>
-              <div className="bg-white rounded-lg shadow-card overflow-x-auto">
-                <div className="min-w-[560px]">
-                  <div className="flex px-5 py-3 text-xs font-semibold tracking-[.4px] uppercase text-black/[.42] border-b border-black/[.08]">
-                    <div className="flex-[2] min-w-[140px]">Leerling</div>
-                    <div className="w-16 flex-none">Klas</div>
-                    <div className="flex-[1.6] min-w-[110px]">Persoonlijke link</div>
-                    <div className="w-[140px] flex-none">Status</div>
-                    <div className="w-[70px] flex-none text-right">Actie</div>
-                  </div>
-                  <div className="max-h-[420px] overflow-y-auto">
-                    {klasStudents.map((s) => (
-                      <div key={s.id} className="flex items-center px-5 py-3 border-b border-black/[.06] last:border-0 text-[13.5px]">
-                        <div className="flex-[2] min-w-[140px] font-semibold">{s.naam}</div>
-                        <div className="w-16 flex-none text-black/55">{s.klas}</div>
-                        <div className="flex-[1.6] min-w-[110px] font-mono text-[11.5px] text-black/50 whitespace-nowrap overflow-hidden text-ellipsis">
-                          stagekosten.school/y/{s.token}
-                        </div>
-                        <div className="w-[140px] flex-none">
-                          <Badge tone={s.linkGeopend ? 'good' : 'neutral'}>{s.linkGeopend ? 'link geopend' : 'nog niet geopend'}</Badge>
-                        </div>
-                        <div className="w-[70px] flex-none text-right text-[12.5px] font-semibold text-accent-dark whitespace-nowrap">
-                          {s.ingediend ? (
-                            <Link to={`/dossier/${s.id}`} target="_blank" rel="noreferrer">
-                              Dossier
-                            </Link>
-                          ) : (
-                            <button onClick={() => regenerateToken(s.id)}>Opnieuw</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="text-[12.5px] leading-[1.55] text-black/50 max-w-[820px]">
-                Een link die nog niet geopend is, kan je opnieuw aanmaken; de oude werkt dan niet meer. Verandert er een naam of klas, dan
-                pas je die hier aan en verhuizen de bonnetjes van die leerling mee.
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-[15px] font-bold mt-2">3 · Plak de namen, één per lijn</div>
+          <div className="text-[15px] font-bold mt-2">3 · Leerling toevoegen aan {klas}</div>
+          <div className="flex gap-2.5 items-center flex-wrap">
+            <input
+              value={quickName}
+              onChange={(e) => setQuickName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addOne()}
+              placeholder="Voornaam Achternaam"
+              className="bg-white border border-black/[.16] rounded-[9px] px-3.5 py-2.5 text-sm min-w-[220px] outline-none"
+            />
+            <button
+              onClick={addOne}
+              disabled={!quickName.trim()}
+              className="bg-accent text-white rounded-[9px] px-4 py-2.5 text-[13.5px] font-bold disabled:opacity-40"
+            >
+              + Toevoegen
+            </button>
+            <button onClick={() => setShowPaste((v) => !v)} className="text-[12.5px] text-accent-dark underline">
+              {showPaste ? 'lijst plakken verbergen' : 'of plak meteen een hele lijst'}
+            </button>
+          </div>
+
+          {showPaste && (
+            <div className="flex flex-col gap-2.5 bg-white border border-black/[.12] rounded-md p-4">
               <textarea
                 value={paste}
                 onChange={(e) => setPaste(e.target.value)}
@@ -191,13 +172,13 @@ export function InviteStudents() {
                   handleFiles(e.dataTransfer.files)
                 }}
                 placeholder={'Yasmine Bakkali\nNoah Verlinden\nLotte Peeters'}
-                className={`min-h-[180px] bg-white border rounded-md px-[18px] py-4 text-[13.5px] leading-[1.75] text-black/75 outline-none resize-y ${
+                className={`min-h-[140px] border rounded-md px-[14px] py-3 text-[13.5px] leading-[1.75] text-black/75 outline-none resize-y ${
                   dragOver ? 'border-accent' : 'border-black/[.12]'
                 }`}
               />
               <input ref={fileInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
               <div className="text-[12.5px] leading-[1.55] text-black/50">
-                Of{' '}
+                Eén naam per lijn, of{' '}
                 <button onClick={() => fileInputRef.current?.click()} className="underline text-accent-dark">
                   sleep de klaslijst hierin
                 </button>{' '}
@@ -209,20 +190,71 @@ export function InviteStudents() {
                   disabled={namesToImport.length === 0}
                   className="bg-accent text-white rounded-[11px] px-5 py-3 text-[13.5px] font-bold disabled:opacity-40"
                 >
-                  {klas} aanmaken ({namesToImport.length} leerlingen)
+                  {namesToImport.length} leerlingen toevoegen aan {klas}
                 </button>
                 <div className="text-[12.5px] text-black/50">elk met €420 totaal en €30 per dag</div>
-                {klasStudents.length > 0 && (
-                  <button onClick={() => setForceForm(false)} className="text-[12.5px] text-black/45 underline ml-2">
-                    annuleren
-                  </button>
-                )}
+              </div>
+            </div>
+          )}
+
+          {hasStudents ? (
+            <>
+              <div className="flex gap-2.5 items-center flex-wrap mt-2">
+                <div className="text-[13px] text-black/55">
+                  {opened} van de {klasStudents.length} leerlingen hebben hun link al geopend. {klasStudents.length - opened} nog niet.
+                  {stage.startDatum ? ` Periode: ${formatShortDate(stage.startDatum)} – ${end ? formatShortDateYear(end) : ''}.` : ' Periode nog niet vastgelegd.'}
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-card overflow-x-auto">
+                <div className="min-w-[640px]">
+                  <div className="flex px-5 py-3 text-xs font-semibold tracking-[.4px] uppercase text-black/[.42] border-b border-black/[.08]">
+                    <div className="flex-[2] min-w-[140px]">Leerling</div>
+                    <div className="w-16 flex-none">Klas</div>
+                    <div className="flex-[1.6] min-w-[110px]">Persoonlijke link</div>
+                    <div className="w-[140px] flex-none">Status</div>
+                    <div className="w-[150px] flex-none text-right">Actie</div>
+                  </div>
+                  <div className="max-h-[420px] overflow-y-auto">
+                    {klasStudents.map((s) => (
+                      <div key={s.id} className="flex items-center px-5 py-3 border-b border-black/[.06] last:border-0 text-[13.5px]">
+                        <div className="flex-[2] min-w-[140px] font-semibold">{s.naam}</div>
+                        <div className="w-16 flex-none text-black/55">{s.klas}</div>
+                        <div className="flex-[1.6] min-w-[110px] font-mono text-[11.5px] text-black/50 whitespace-nowrap overflow-hidden text-ellipsis">
+                          stagekosten.school/y/{s.token}
+                        </div>
+                        <div className="w-[140px] flex-none">
+                          <Badge tone={s.linkGeopend ? 'good' : 'neutral'}>{s.linkGeopend ? 'link geopend' : 'nog niet geopend'}</Badge>
+                        </div>
+                        <div className="w-[150px] flex-none flex justify-end gap-3 text-[12.5px] font-semibold whitespace-nowrap">
+                          {s.ingediend ? (
+                            <Link to={`/dossier/${s.id}`} target="_blank" rel="noreferrer" className="text-accent-dark">
+                              Dossier
+                            </Link>
+                          ) : (
+                            <button onClick={() => regenerateToken(s.id)} className="text-accent-dark">
+                              Opnieuw
+                            </button>
+                          )}
+                          <button onClick={() => remove(s.id, s.naam)} className="text-black/40 hover:text-red-600">
+                            Verwijderen
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="text-[12.5px] leading-[1.55] text-black/50 max-w-[820px]">
+                Een link die nog niet geopend is, kan je opnieuw aanmaken; de oude werkt dan niet meer. Verandert er een naam of klas, dan
+                pas je die hier aan en verhuizen de bonnetjes van die leerling mee.
               </div>
             </>
+          ) : (
+            !showPaste && <div className="text-[13px] text-black/45">Nog geen leerlingen in {klas}. Voeg er een toe hierboven.</div>
           )}
         </div>
 
-        {!showTable && (
+        {!hasStudents && (
           <div className="w-[330px] flex-none bg-white rounded-lg p-[22px] flex flex-col gap-3.5 shadow-card self-start">
             <div className="text-[14.5px] font-bold">Wat de leerling krijgt</div>
             <div className="text-[13px] leading-[1.6] text-black/60">
@@ -230,13 +262,11 @@ export function InviteStudents() {
               link en kunnen alleen door jou aangepast worden.
             </div>
             <div className="border border-dashed border-black/[.18] rounded-md p-4 flex gap-4 items-center">
-              <QrCode value={`https://stagekosten.school/y/${klasStudents[0]?.token ?? '8QF2-M'}`} />
+              <QrCode value="https://stagekosten.school/y/8QF2-M" />
               <div className="flex flex-col gap-1 min-w-0">
-                <div className="text-[13.5px] font-bold">{klasStudents[0]?.naam ?? 'Naam leerling'}</div>
+                <div className="text-[13.5px] font-bold">Naam leerling</div>
                 <div className="text-xs text-black/50">{klas}</div>
-                <div className="text-[11px] font-mono text-black/45 break-all">
-                  stagekosten.school/y/{klasStudents[0]?.token ?? '8QF2-M'}
-                </div>
+                <div className="text-[11px] font-mono text-black/45 break-all">stagekosten.school/y/8QF2-M</div>
               </div>
             </div>
             <div className="text-[12.5px] leading-[1.55] text-black/50">Print de strookjes en geef ze mee, of mail de links naar de leerlingen.</div>

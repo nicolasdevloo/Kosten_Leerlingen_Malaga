@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useStore, primaryStage } from '@/data/store'
 import { downloadCsv, receiptsToCsv } from '@/lib/csv'
 
@@ -24,10 +24,8 @@ export function TeacherShell() {
               }`
             }
           >
-            {stage?.naam ?? 'Málaga 2026'}
+            {stage?.naam ?? 'Málaga 2027'}
           </NavLink>
-          <div className="px-3 py-2.5 text-[13.5px] text-black/35">Lissabon 2026</div>
-          <div className="px-3 py-2.5 text-[13.5px] text-black/35">Archief</div>
         </div>
         <NavLink
           to="/leerkracht/leerlingen"
@@ -41,14 +39,14 @@ export function TeacherShell() {
         </NavLink>
         <div className="mt-auto flex flex-col gap-2">
           <div className="text-xs font-semibold tracking-[.4px] uppercase text-black/40">export</div>
-          <a
-            href={stage ? `/dossier/klas/alle` : '#'}
+          <Link
+            to="/dossier/klas/alle"
             target="_blank"
             rel="noreferrer"
             className="border border-black/[.14] rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-center cursor-pointer hover:bg-black/[.02]"
           >
             Erasmus+ PDF (klas)
-          </a>
+          </Link>
           <button
             onClick={() => stage && downloadCsv(`bonnetjes-${stage.naam}.csv`, receiptsToCsv(Object.values(receipts), students))}
             className="border border-black/[.14] bg-white rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-center cursor-pointer hover:bg-black/[.02]"

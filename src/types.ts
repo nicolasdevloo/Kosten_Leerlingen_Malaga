@@ -6,7 +6,7 @@ export type KlasCode = '6AD' | '6BO' | '6CO' | '6OOS' | '6TC'
 
 export const KLASSEN: KlasCode[] = ['6AD', '6BO', '6CO', '6OOS', '6TC']
 
-/** Een stage-editie, bv. "Málaga 2026". De periode kan leeg zijn tot de leerkracht ze vastlegt. */
+/** Een stage-editie, bv. "Málaga 2027". De periode kan leeg zijn tot de leerkracht ze vastlegt. */
 export interface Stage {
   id: string
   naam: string

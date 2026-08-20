@@ -17,6 +17,7 @@ export function AddFlow() {
   const receipts = useStore((s) => (student ? studentReceipts(s, student.id) : []))
   const addReceipt = useStore((s) => s.addReceipt)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<Step>('choice')
   const [photo, setPhoto] = useState<string | null>(null)
@@ -45,13 +46,6 @@ export function AddFlow() {
       setStep('review')
     }
     reader.readAsDataURL(file)
-  }
-
-  const manual = () => {
-    setPhoto(null)
-    setOcrLine('')
-    setAmountInput('')
-    setStep('review')
   }
 
   const doSave = (pendingOverride?: boolean) => {
@@ -106,6 +100,7 @@ export function AddFlow() {
   return (
     <div className="min-h-screen max-w-[480px] mx-auto bg-[#0F1017] px-5 pt-14 pb-16 flex flex-col gap-4">
       <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPickFile} />
+      <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
       <div className="flex justify-between items-center">
         <div className="text-[17px] font-bold text-white">Bonnetje toevoegen</div>
         <button
@@ -141,17 +136,12 @@ export function AddFlow() {
           >
             Foto maken
           </button>
-          <div className="flex gap-2.5">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 bg-white/10 rounded-full py-[15px] text-center text-sm font-semibold text-white"
-            >
-              Uit galerij
-            </button>
-            <button onClick={manual} className="flex-1 bg-white/10 rounded-full py-[15px] text-center text-sm font-semibold text-white">
-              Bedrag zelf typen
-            </button>
-          </div>
+          <button
+            onClick={() => galleryInputRef.current?.click()}
+            className="bg-white/10 rounded-full py-[15px] text-center text-sm font-semibold text-white"
+          >
+            Uit galerij
+          </button>
         </div>
       )}
 
@@ -183,7 +173,9 @@ export function AddFlow() {
                   className="text-[30px] font-extrabold tracking-[-1px] border-none outline-none w-full p-0 bg-transparent tabular-nums"
                   autoFocus={!photo}
                 />
-                <div className="text-xs text-black/45">tik om te corrigeren</div>
+                <div className="text-xs text-black/45">
+                  {amountCents > 0 ? `dat is ${formatCents(amountCents)} — controleer of dat klopt` : 'tik om het bedrag in te vullen'}
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-2">
