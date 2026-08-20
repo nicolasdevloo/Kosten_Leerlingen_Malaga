@@ -20,6 +20,8 @@ interface AppState {
 
   addReceipt: (studentId: string, data: Omit<Bonnetje, 'id' | 'studentId'>) => Bonnetje
   setReceiptCategory: (receiptId: string, categorie: Categorie) => void
+  updateReceipt: (receiptId: string, data: Partial<Pick<Bonnetje, 'bedragCents' | 'categorie' | 'titel' | 'omschrijving'>>) => void
+  deleteReceipt: (receiptId: string) => void
   syncPending: (studentId: string) => void
 
   submitDossier: (studentId: string) => void
@@ -65,6 +67,22 @@ export const useStore = create<AppState>()(
           const existing = state.receipts[receiptId]
           if (!existing) return state
           return { receipts: { ...state.receipts, [receiptId]: { ...existing, categorie } } }
+        })
+      },
+
+      updateReceipt: (receiptId, data) => {
+        set((state) => {
+          const existing = state.receipts[receiptId]
+          if (!existing) return state
+          return { receipts: { ...state.receipts, [receiptId]: { ...existing, ...data } } }
+        })
+      },
+
+      deleteReceipt: (receiptId) => {
+        set((state) => {
+          const receipts = { ...state.receipts }
+          delete receipts[receiptId]
+          return { receipts }
         })
       },
 

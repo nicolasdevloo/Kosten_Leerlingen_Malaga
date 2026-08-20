@@ -81,7 +81,7 @@ export function Dashboard() {
 
       <Card className="p-[18px] flex flex-col gap-3">
         <div className="flex justify-between items-baseline">
-          <div className="text-[13.5px] font-semibold">Totaalbudget · harde grens</div>
+          <div className="text-[13.5px] font-semibold">Maximaal te besteden bedrag</div>
           <div className="text-[13px] text-black/50 tabular-nums">
             {formatCents(spentTotal)} van {formatCents(stage.totaalBudgetCents)}
           </div>

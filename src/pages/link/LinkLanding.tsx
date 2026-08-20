@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '@/data/store'
 import { formatCents } from '@/lib/money'
 import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
+import { capitalizeFirst } from '@/lib/text'
 
 type Step = 'confirm' | 'wrong' | 'addHome'
 
@@ -124,8 +125,8 @@ export function LinkLanding() {
         </div>
       </div>
       <div className="text-[13.5px] leading-[1.55] text-black/60">
-        {stage.begeleider} heeft deze link voor jou gemaakt. Er is geen wachtwoord: je naam en klas zitten al in de link. Bevestig
-        alleen dat de link bij jou hoort.
+        {capitalizeFirst(stage.begeleider)} heeft deze link voor jou gemaakt. Er is geen wachtwoord: je naam en klas zitten al in de
+        link. Bevestig alleen dat de link bij jou hoort.
       </div>
       <div className="mt-auto flex flex-col gap-2.5">
         <button onClick={confirm} className="bg-accent rounded-xl py-4 text-center text-[15.5px] font-bold text-white">

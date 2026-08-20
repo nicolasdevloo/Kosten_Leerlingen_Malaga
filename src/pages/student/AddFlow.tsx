@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 import { useStore, studentReceipts } from '@/data/store'
@@ -18,6 +18,8 @@ export function AddFlow() {
   const addReceipt = useStore((s) => s.addReceipt)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   const [step, setStep] = useState<Step>('choice')
   const [photo, setPhoto] = useState<string | null>(null)
@@ -26,26 +28,75 @@ export function AddFlow() {
   const [categorie, setCategorie] = useState<Categorie | null>(null)
   const [note, setNote] = useState('')
   const [savedLine, setSavedLine] = useState('')
+  const [cameraReady, setCameraReady] = useState(false)
+
+  // Live camera in de app zelf, zodat "Foto maken" altijd rechtstreeks de camera opent i.p.v. soms
+  // een bestandenkiezer (afhankelijk van toestel/browser bij het "capture"-attribuut op een file-input).
+  useEffect(() => {
+    if (step !== 'choice') return
+    let cancelled = false
+    navigator.mediaDevices
+      ?.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then((stream) => {
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
+        streamRef.current = stream
+        if (videoRef.current) videoRef.current.srcObject = stream
+        setCameraReady(true)
+      })
+      .catch(() => setCameraReady(false))
+    return () => {
+      cancelled = true
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+      setCameraReady(false)
+    }
+  }, [step])
 
   if (!student || !stage) return null
 
   const amountCents = parseCentsInput(amountInput)
   const goDash = () => navigate('/app')
 
+  const applyPhoto = (dataUrl: string) => {
+    setPhoto(dataUrl)
+    // Simulatie van OCR: een plausibel bedrag wordt voorgesteld, de leerling corrigeert het zo nodig.
+    const guessed = Math.round((3 + Math.random() * 15) * 100)
+    setAmountInput((guessed / 100).toFixed(2).replace('.', ','))
+    setOcrLine(`Ik las ${formatCents(guessed)} op de foto. Klopt dat?`)
+    setStep('review')
+  }
+
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
-      setPhoto(String(reader.result))
-      // Simulatie van OCR: een plausibel bedrag wordt voorgesteld, de leerling corrigeert het zo nodig.
-      const guessed = Math.round((3 + Math.random() * 15) * 100)
-      setAmountInput((guessed / 100).toFixed(2).replace('.', ','))
-      setOcrLine(`Ik las ${formatCents(guessed)} op de foto. Klopt dat?`)
-      setStep('review')
-    }
+    reader.onload = () => applyPhoto(String(reader.result))
     reader.readAsDataURL(file)
+  }
+
+  const shootFromCamera = () => {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0) return
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    applyPhoto(canvas.toDataURL('image/jpeg', 0.85))
+  }
+
+  const onFotoMaken = () => {
+    if (cameraReady) {
+      shootFromCamera()
+    } else {
+      // Geen camera beschikbaar in de browser (of geweigerd): terugvalpad via de bestandskiezer met camera-hint.
+      fileInputRef.current?.click()
+    }
   }
 
   const doSave = (pendingOverride?: boolean) => {
@@ -116,22 +167,29 @@ export function AddFlow() {
 
       {step === 'choice' && (
         <div className="flex flex-col gap-4">
-          <div
-            className="rounded-xl border border-white/[.14] h-[400px] flex flex-col items-center justify-center gap-3"
-            style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px)' }}
-          >
-            <div className="w-[150px] h-[190px] rounded-[10px] border-2 border-dashed border-white/35" />
-            <div className="font-mono text-xs text-white/50 text-center">
-              camerabeeld
-              <br />
-              leg het bonnetje in het kader
-            </div>
+          <div className="relative rounded-xl border border-white/[.14] h-[400px] overflow-hidden flex flex-col items-center justify-center gap-3">
+            {cameraReady ? (
+              <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px)' }}
+              />
+            )}
+            <div className="relative w-[150px] h-[190px] rounded-[10px] border-2 border-dashed border-white/60" />
+            {!cameraReady && (
+              <div className="relative font-mono text-xs text-white/50 text-center">
+                camerabeeld
+                <br />
+                leg het bonnetje in het kader
+              </div>
+            )}
           </div>
           <div className="text-[12.5px] leading-[1.5] text-white/45 text-center">
             Elke uitgave heeft een bonnetje nodig. Zonder foto kan je niets opslaan.
           </div>
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={onFotoMaken}
             className="bg-white rounded-full py-[17px] text-center text-base font-bold text-[#0F1017]"
           >
             Foto maken

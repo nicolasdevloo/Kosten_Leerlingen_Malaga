@@ -3,6 +3,7 @@ import { useSession } from '@/hooks/useSession'
 import { useStore, studentReceipts } from '@/data/store'
 import { incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
+import { capitalizeFirst } from '@/lib/text'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 
@@ -86,7 +87,8 @@ export function Submit() {
         <div className="bg-good-soft rounded-2xl p-5 flex flex-col gap-2 animate-pop">
           <div className="text-base font-bold text-good-text">Verstuurd</div>
           <div className="text-[13.5px] leading-[1.5] text-good-text">
-            {stage.begeleider} ziet je dossier in zijn dashboard. Je kan niets meer wijzigen — vraag hem om iets te heropenen.
+            {capitalizeFirst(stage.begeleider)} ziet je dossier in zijn dashboard. Je kan niets meer wijzigen — vraag hem om iets te
+            heropenen.
           </div>
         </div>
       )}

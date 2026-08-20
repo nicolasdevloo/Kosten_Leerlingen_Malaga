@@ -135,9 +135,9 @@ export function DossierContent({ student, stage, receipts }: { student: Student;
         {numbered.flatMap((d) =>
           d.receipts.map((r) => (
             <div key={r.id} className="break-inside-avoid">
-              <div className="aspect-[3/4] border border-black/25 overflow-hidden flex items-center justify-center font-mono text-[8pt] text-black/50">
+              <div className="aspect-[3/4] border border-black/25 overflow-hidden flex items-center justify-center font-mono text-[8pt] text-black/50 bg-black/[.03]">
                 {r.fotoDataUrl ? (
-                  <img src={r.fotoDataUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={r.fotoDataUrl} alt="" className="w-full h-full object-contain" />
                 ) : (
                   <div
                     className="w-full h-full flex items-center justify-center"
