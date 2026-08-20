@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #F7F6F3;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  color: #14151A;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+::selection {
+  background: oklch(0.90 0.05 255);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
