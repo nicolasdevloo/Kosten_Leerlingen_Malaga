@@ -1,22 +1,50 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '@/data/store'
 import { formatCents } from '@/lib/money'
 import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { capitalizeFirst } from '@/lib/text'
+import { decodeLinkPayload } from '@/lib/linkPayload'
 
 type Step = 'confirm' | 'wrong' | 'addHome'
 
 export function LinkLanding() {
-  const { token } = useParams<{ token: string }>()
+  const { token: routeParam } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const students = useStore((s) => s.students)
   const stages = useStore((s) => s.stages)
   const confirmSession = useStore((s) => s.confirmSession)
+  const provisionFromLink = useStore((s) => s.provisionFromLink)
   const [step, setStep] = useState<Step>('confirm')
 
-  const student = Object.values(students).find((s) => s.token === token)
-  const stage = student ? stages[student.stageId] : undefined
+  // Echte leerlinglinks bevatten naam, klas en de stage-instellingen rechtstreeks (geen server nodig).
+  // Oudere/interne links (bv. de demo-startpagina) geven gewoon het kale token door.
+  const payload = routeParam ? decodeLinkPayload(routeParam) : null
+  const lookupToken = payload?.token ?? routeParam
+
+  useEffect(() => {
+    if (payload) provisionFromLink(payload)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeParam])
+
+  // Val meteen terug op de gegevens uit de link zelf (i.p.v. te wachten op de effect hierboven),
+  // zodat een geldige link nooit eerst even "ongeldig" flitst voor hij verwerkt is.
+  const storedStudent = Object.values(students).find((s) => s.token === lookupToken)
+  const student =
+    storedStudent ??
+    (payload
+      ? {
+          id: `student_${payload.token}`,
+          stageId: payload.stage.id,
+          naam: payload.naam,
+          klas: payload.klas,
+          token: payload.token,
+          linkGeopend: false,
+          ingediend: false,
+          heropend: false
+        }
+      : undefined)
+  const stage = student ? stages[student.stageId] ?? payload?.stage : undefined
 
   if (!student || !stage) {
     return (

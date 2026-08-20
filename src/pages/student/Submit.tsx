@@ -3,9 +3,34 @@ import { useSession } from '@/hooks/useSession'
 import { useStore, studentReceipts } from '@/data/store'
 import { incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
-import { capitalizeFirst } from '@/lib/text'
+import { buildDossierExport, dossierExportFilename } from '@/lib/dossierExport'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import type { Student, Stage, Bonnetje } from '@/types'
+
+async function shareDossierFile(student: Student, stage: Stage, receipts: Bonnetje[]) {
+  const json = JSON.stringify(buildDossierExport(student, stage, receipts), null, 2)
+  const filename = dossierExportFilename(student.naam)
+  const file = new File([json], filename, { type: 'application/json' })
+
+  const nav = navigator as Navigator & { canShare?: (data: { files: File[] }) => boolean }
+  if (nav.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: `Stagekosten — ${student.naam}` })
+      return
+    } catch {
+      // Leerling annuleerde het deelvenster: val terug op downloaden.
+    }
+  }
+  const url = URL.createObjectURL(file)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
 
 function CheckDot({ done = true }: { done?: boolean }) {
   return done ? (
@@ -84,13 +109,36 @@ export function Submit() {
       )}
 
       {student.ingediend && (
-        <div className="bg-good-soft rounded-2xl p-5 flex flex-col gap-2 animate-pop">
-          <div className="text-base font-bold text-good-text">Verstuurd</div>
-          <div className="text-[13.5px] leading-[1.5] text-good-text">
-            {capitalizeFirst(stage.begeleider)} ziet je dossier in zijn dashboard. Je kan niets meer wijzigen — vraag hem om iets te
-            heropenen.
+        <>
+          <div className="bg-good-soft rounded-2xl p-5 flex flex-col gap-2 animate-pop">
+            <div className="text-base font-bold text-good-text">Afgerond</div>
+            <div className="text-[13.5px] leading-[1.5] text-good-text">
+              Je kan niets meer wijzigen aan je bonnetjes — vraag {stage.begeleider} om je dossier te heropenen als er nog iets moet
+              veranderen.
+            </div>
           </div>
-        </div>
+          <div className="bg-white rounded-2xl p-[18px] flex flex-col gap-3">
+            <div className="text-[13.5px] font-semibold">Nu nog zelf bezorgen aan {stage.begeleider}</div>
+            <div className="text-[12.5px] leading-[1.5] text-black/50">
+              Er is geen automatische verzending — jij stuurt dit zelf door, bv. via WhatsApp of e-mail.
+            </div>
+            <Link
+              to={`/dossier/${student.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="border border-black/[.15] rounded-full py-3.5 text-center text-sm font-bold"
+            >
+              PDF bekijken en opslaan
+            </Link>
+            <Button variant="dark" full onClick={() => shareDossierFile(student, stage, receipts)} className="!py-3.5 rounded-full">
+              Dossierbestand delen
+            </Button>
+            <div className="text-[11.5px] leading-[1.45] text-black/40">
+              De PDF is voor de Erasmus+-papieren. Het dossierbestand laat {stage.begeleider} jouw bonnetjes ook in zijn dashboard
+              importeren.
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

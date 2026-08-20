@@ -1,11 +1,30 @@
+import { useRef, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useStore, primaryStage } from '@/data/store'
 import { downloadCsv, receiptsToCsv } from '@/lib/csv'
+import { parseDossierExport } from '@/lib/dossierExport'
 
 export function TeacherShell() {
   const stage = useStore(primaryStage)
   const receipts = useStore((s) => s.receipts)
   const students = useStore((s) => s.students)
+  const importDossier = useStore((s) => s.importDossier)
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
+
+  const handleImport = async (files: FileList | null) => {
+    const file = files?.[0]
+    if (!file) return
+    const text = await file.text()
+    const data = parseDossierExport(text)
+    if (!data) {
+      setImportMessage('Kon dit bestand niet lezen — is het een dossierbestand uit de app?')
+    } else {
+      importDossier(data)
+      setImportMessage(`Dossier van ${data.student.naam} geïmporteerd.`)
+    }
+    setTimeout(() => setImportMessage(null), 4000)
+  }
 
   return (
     <div className="min-h-screen flex bg-app text-ink overflow-hidden">
@@ -37,6 +56,28 @@ export function TeacherShell() {
         >
           Leerlingen uitnodigen
         </NavLink>
+
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-semibold tracking-[.4px] uppercase text-black/40">van een leerling ontvangen</div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              handleImport(e.target.files)
+              e.target.value = ''
+            }}
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            className="bg-accent text-white rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-center cursor-pointer"
+          >
+            Dossierbestand importeren
+          </button>
+          {importMessage && <div className="text-[11.5px] leading-[1.4] text-black/55">{importMessage}</div>}
+        </div>
+
         <div className="mt-auto flex flex-col gap-2">
           <div className="text-xs font-semibold tracking-[.4px] uppercase text-black/40">export</div>
           <Link

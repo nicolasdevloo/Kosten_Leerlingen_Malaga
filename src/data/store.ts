@@ -5,6 +5,8 @@ import { buildSeed } from '@/data/seed'
 import { idbStorage } from '@/data/idbStorage'
 import { generateId, generateToken } from '@/lib/token'
 import { todayIso } from '@/lib/date'
+import type { LinkPayload } from '@/lib/linkPayload'
+import type { DossierExport } from '@/lib/dossierExport'
 
 interface AppState {
   stages: Record<string, Stage>
@@ -32,6 +34,9 @@ interface AppState {
   importStudents: (stageId: string, klas: KlasCode, namen: string[]) => Student[]
   regenerateToken: (studentId: string) => string
   deleteStudent: (studentId: string) => void
+
+  provisionFromLink: (payload: LinkPayload) => void
+  importDossier: (data: DossierExport) => void
 }
 
 export const useStore = create<AppState>()(
@@ -173,6 +178,51 @@ export const useStore = create<AppState>()(
           )
           const sessionToken = state.sessionToken === deletedStudent.token ? null : state.sessionToken
           return { students, receipts, sessionToken }
+        })
+      },
+
+      provisionFromLink: (payload) => {
+        // Bootstrap voor een vers toestel: de link zelf bevat alles wat nodig is, er is geen
+        // server om het bij op te vragen. Bestaat het lokaal al (zelfde link nogmaals geopend),
+        // dan blijven de eigen bonnetjes en indieningsstatus van de leerling gewoon staan.
+        const studentId = `student_${payload.token}`
+        set((state) => {
+          const existing = state.students[studentId]
+          const student: Student = existing
+            ? { ...existing, naam: payload.naam, klas: payload.klas }
+            : {
+                id: studentId,
+                stageId: payload.stage.id,
+                naam: payload.naam,
+                klas: payload.klas,
+                token: payload.token,
+                linkGeopend: false,
+                ingediend: false,
+                heropend: false
+              }
+          return {
+            stages: { ...state.stages, [payload.stage.id]: payload.stage },
+            students: { ...state.students, [studentId]: student }
+          }
+        })
+      },
+
+      importDossier: (data) => {
+        set((state) => {
+          const existing = Object.values(state.students).find((s) => s.token === data.student.token)
+          const studentId = existing?.id ?? data.student.id
+          const student: Student = {
+            ...data.student,
+            id: studentId,
+            ingediend: true,
+            heropend: false,
+            linkGeopend: true
+          }
+          const receipts = Object.fromEntries(Object.entries(state.receipts).filter(([, r]) => r.studentId !== studentId))
+          for (const r of data.receipts) {
+            receipts[r.id] = { ...r, studentId }
+          }
+          return { students: { ...state.students, [studentId]: student }, receipts }
         })
       }
     }),

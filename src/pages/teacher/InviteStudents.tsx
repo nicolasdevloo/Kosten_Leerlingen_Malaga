@@ -7,6 +7,7 @@ import type { KlasCode } from '@/types'
 import { Chip } from '@/components/ui/Chip'
 import { Badge } from '@/components/ui/Badge'
 import { QrCode } from '@/components/ui/QrCode'
+import { buildStudentLink } from '@/lib/linkPayload'
 
 function parseNamesFromFile(text: string): string[] {
   return text
@@ -28,6 +29,8 @@ export function InviteStudents() {
   const [paste, setPaste] = useState('')
   const [showPaste, setShowPaste] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [qrStudent, setQrStudent] = useState<{ naam: string; klas: KlasCode; token: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const klasStudents = useMemo(() => allInStage.filter((s) => s.klas === klas), [allInStage, klas])
@@ -67,6 +70,13 @@ export function InviteStudents() {
     if (window.confirm(`${naam} verwijderen? Zijn bonnetjes en link verdwijnen mee. Dit kan niet ongedaan gemaakt worden.`)) {
       deleteStudent(studentId)
     }
+  }
+
+  const copyLink = (s: (typeof klasStudents)[number]) => {
+    navigator.clipboard.writeText(buildStudentLink(s.token, s.naam, s.klas, stage)).then(() => {
+      setCopiedId(s.id)
+      setTimeout(() => setCopiedId((id) => (id === s.id ? null : id)), 1500)
+    })
   }
 
   const end = stage.startDatum ? stageEndDate(stage.startDatum, stage.aantalDagen) : null
@@ -206,26 +216,34 @@ export function InviteStudents() {
                 </div>
               </div>
               <div className="bg-white rounded-lg shadow-card overflow-x-auto">
-                <div className="min-w-[640px]">
+                <div className="min-w-[680px]">
                   <div className="flex px-5 py-3 text-xs font-semibold tracking-[.4px] uppercase text-black/[.42] border-b border-black/[.08]">
                     <div className="flex-[2] min-w-[140px]">Leerling</div>
                     <div className="w-16 flex-none">Klas</div>
                     <div className="flex-[1.6] min-w-[110px]">Persoonlijke link</div>
                     <div className="w-[140px] flex-none">Status</div>
-                    <div className="w-[150px] flex-none text-right">Actie</div>
+                    <div className="w-[190px] flex-none text-right">Actie</div>
                   </div>
                   <div className="max-h-[420px] overflow-y-auto">
                     {klasStudents.map((s) => (
                       <div key={s.id} className="flex items-center px-5 py-3 border-b border-black/[.06] last:border-0 text-[13.5px]">
                         <div className="flex-[2] min-w-[140px] font-semibold">{s.naam}</div>
                         <div className="w-16 flex-none text-black/55">{s.klas}</div>
-                        <div className="flex-[1.6] min-w-[110px] font-mono text-[11.5px] text-black/50 whitespace-nowrap overflow-hidden text-ellipsis">
-                          stagekosten.school/y/{s.token}
+                        <div className="flex-[1.6] min-w-[110px]">
+                          <button
+                            onClick={() => copyLink(s)}
+                            className="font-mono text-[11.5px] text-accent-dark underline decoration-dotted whitespace-nowrap"
+                          >
+                            {copiedId === s.id ? 'gekopieerd ✓' : 'kopieer link'}
+                          </button>
                         </div>
                         <div className="w-[140px] flex-none">
                           <Badge tone={s.linkGeopend ? 'good' : 'neutral'}>{s.linkGeopend ? 'link geopend' : 'nog niet geopend'}</Badge>
                         </div>
-                        <div className="w-[150px] flex-none flex justify-end gap-3 text-[12.5px] font-semibold whitespace-nowrap">
+                        <div className="w-[190px] flex-none flex justify-end gap-3 text-[12.5px] font-semibold whitespace-nowrap">
+                          <button onClick={() => setQrStudent(s)} className="text-accent-dark">
+                            QR
+                          </button>
                           {s.ingediend ? (
                             <Link to={`/dossier/${s.id}`} target="_blank" rel="noreferrer" className="text-accent-dark">
                               Dossier
@@ -261,18 +279,25 @@ export function InviteStudents() {
               Voor elke naam maakt de app één persoonlijke link met een QR-code. Geen account, geen wachtwoord. Naam en klas zitten in de
               link en kunnen alleen door jou aangepast worden.
             </div>
-            <div className="border border-dashed border-black/[.18] rounded-md p-4 flex gap-4 items-center">
-              <QrCode value="https://stagekosten.school/y/8QF2-M" />
-              <div className="flex flex-col gap-1 min-w-0">
-                <div className="text-[13.5px] font-bold">Naam leerling</div>
-                <div className="text-xs text-black/50">{klas}</div>
-                <div className="text-[11px] font-mono text-black/45 break-all">stagekosten.school/y/8QF2-M</div>
-              </div>
+            <div className="text-[12.5px] leading-[1.55] text-black/50">
+              Voeg hierboven een leerling toe om zijn echte link en QR-code te zien.
             </div>
-            <div className="text-[12.5px] leading-[1.55] text-black/50">Print de strookjes en geef ze mee, of mail de links naar de leerlingen.</div>
           </div>
         )}
       </div>
+
+      {qrStudent && stage && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setQrStudent(null)}>
+          <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <QrCode value={buildStudentLink(qrStudent.token, qrStudent.naam, qrStudent.klas, stage)} size={220} />
+            <div className="text-base font-bold">{qrStudent.naam}</div>
+            <div className="text-sm text-black/50">{qrStudent.klas}</div>
+            <button onClick={() => setQrStudent(null)} className="mt-2 text-sm font-semibold text-accent-dark">
+              Sluiten
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
