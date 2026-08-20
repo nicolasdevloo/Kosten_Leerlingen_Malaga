@@ -4,7 +4,17 @@ Een budget- en bonnetjesapp voor leerlingen van het zesde jaar die op buitenland
 
 Gebouwd volgens de designhandoff in `design_handoff_stagekosten/`: React + Vite als PWA (offline-first, "zet op beginscherm"), met een leerlingapp (mobiel) en een leerkrachtdashboard (desktop) in dezelfde codebase.
 
-## Starten
+## Live bekijken
+
+Deze repo bevat een GitHub Actions-workflow (`.github/workflows/deploy-pages.yml`) die de app automatisch bouwt en publiceert op **GitHub Pages** bij elke push naar `main` of `claude/apps-maken-vqpam8`. Eenmalig instellen:
+
+1. Ga op GitHub naar **Settings → Pages** van deze repo.
+2. Zet bij **Source** de waarde op **GitHub Actions**.
+3. Wacht tot de workflow onder het tabblad **Actions** groen is (duurt ~1 minuut) — de link staat dan bovenaan die workflow-run, en ziet er zo uit: `https://nicolasdevloo.github.io/Kosten_Leerlingen_Malaga/`.
+
+Die link werkt meteen op telefoon en laptop, kan je delen, en kan op een gsm-beginscherm gezet worden zoals in de app zelf beschreven staat.
+
+## Starten (lokaal)
 
 ```bash
 npm install
