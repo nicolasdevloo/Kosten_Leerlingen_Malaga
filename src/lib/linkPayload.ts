@@ -36,13 +36,3 @@ export function buildStudentLink(token: string, naam: string, klas: KlasCode, st
   const base = `${window.location.origin}${import.meta.env.BASE_URL}`
   return `${base}#/y/${payload}`
 }
-
-/**
- * Link die de leerkracht naar de leerling stuurt om een ingediend dossier te heropenen.
- * De leerkracht kan het niet rechtstreeks op het toestel van de leerling zetten (geen server),
- * dus de leerling opent zelf deze link — op hetzelfde toestel waar hij ook indiende.
- */
-export function buildReopenLink(token: string): string {
-  const base = `${window.location.origin}${import.meta.env.BASE_URL}`
-  return `${base}#/heropen/${token}`
-}

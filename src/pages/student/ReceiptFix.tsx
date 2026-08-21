@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { useSession } from '@/hooks/useSession'
 import { useStore } from '@/data/store'
 import { formatCents, parseCentsInput } from '@/lib/money'
 import { formatRelative } from '@/lib/date'
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/Button'
 export function ReceiptFix() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { student } = useSession()
   const receipt = useStore((s) => (id ? s.receipts[id] : undefined))
   const updateReceipt = useStore((s) => s.updateReceipt)
   const deleteReceipt = useStore((s) => s.deleteReceipt)
@@ -25,7 +23,6 @@ export function ReceiptFix() {
   if (!receipt) return <Navigate to="/app/bonnetjes" replace />
 
   const amountCents = parseCentsInput(amountInput)
-  const readOnly = student?.ingediend ?? false
 
   const save = () => {
     if (!categorie || amountCents <= 0) return
@@ -68,25 +65,21 @@ export function ReceiptFix() {
           <div className="flex flex-col gap-[3px]">
             <div className="text-[12.5px] text-black/50">{formatRelative(receipt.tijdstip)}</div>
           </div>
-          {readOnly ? (
-            <div className="text-[26px] font-extrabold tracking-[-0.8px] tabular-nums">{formatCents(receipt.bedragCents)}</div>
-          ) : (
-            <div className="flex flex-col items-end gap-0.5">
-              <input
-                value={amountInput}
-                onChange={(e) => setAmountInput(e.target.value)}
-                inputMode="decimal"
-                className="text-[26px] font-extrabold tracking-[-0.8px] tabular-nums text-right border-none outline-none w-[140px] bg-transparent"
-              />
-              <div className="text-[11px] text-black/40">{amountCents > 0 ? formatCents(amountCents) : 'bedrag'}</div>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-0.5">
+            <input
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              inputMode="decimal"
+              className="text-[26px] font-extrabold tracking-[-0.8px] tabular-nums text-right border-none outline-none w-[140px] bg-transparent"
+            />
+            <div className="text-[11px] text-black/40">{amountCents > 0 ? formatCents(amountCents) : 'bedrag'}</div>
+          </div>
         </div>
         <div className="flex flex-col gap-2.5 border-t border-black/[.07] pt-4">
           <div className="text-[13.5px] font-semibold">Categorie</div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIEEN.map((c) => (
-              <Chip key={c} active={categorie === c} onClick={() => !readOnly && setCategorie(c)}>
+              <Chip key={c} active={categorie === c} onClick={() => setCategorie(c)}>
                 {c}
               </Chip>
             ))}
@@ -94,33 +87,21 @@ export function ReceiptFix() {
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-[11.5px] font-semibold tracking-[.5px] uppercase text-black/45">omschrijving</div>
-          {readOnly ? (
-            <div className="text-sm text-black/75">{receipt.omschrijving || '—'}</div>
-          ) : (
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="bv. Café Central — koffie"
-              className="rounded-md bg-black/[.05] px-[15px] py-[13px] text-sm text-black/75 outline-none"
-            />
-          )}
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="bv. Café Central — koffie"
+            className="rounded-md bg-black/[.05] px-[15px] py-[13px] text-sm text-black/75 outline-none"
+          />
         </div>
       </div>
 
-      {readOnly ? (
-        <div className="text-[12.5px] leading-[1.5] text-black/45 text-center">
-          Je dossier is ingediend. Vraag je begeleider om het te heropenen als er nog iets moet veranderen.
-        </div>
-      ) : (
-        <>
-          <Button variant="primary" full onClick={save} disabled={!categorie || amountCents <= 0} className="!py-4 rounded-full">
-            Wijzigingen opslaan
-          </Button>
-          <button onClick={remove} className="text-sm font-semibold text-red-600 text-center py-2">
-            Bonnetje verwijderen
-          </button>
-        </>
-      )}
+      <Button variant="primary" full onClick={save} disabled={!categorie || amountCents <= 0} className="!py-4 rounded-full">
+        Wijzigingen opslaan
+      </Button>
+      <button onClick={remove} className="text-sm font-semibold text-red-600 text-center py-2">
+        Bonnetje verwijderen
+      </button>
 
       {lightbox && receipt.fotoDataUrl && (
         <div

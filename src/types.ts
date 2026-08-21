@@ -28,9 +28,8 @@ export interface Student {
   /** Het token uit de persoonlijke link, bv. "8QF2-M". */
   token: string
   linkGeopend: boolean
+  /** true zodra de leerling minstens één keer een dossier(bestand) heeft verstuurd. */
   ingediend: boolean
-  /** true als de leerkracht een ingediend dossier heropend heeft. */
-  heropend: boolean
 }
 
 export interface Bonnetje {

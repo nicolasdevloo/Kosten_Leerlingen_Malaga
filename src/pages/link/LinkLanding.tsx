@@ -40,8 +40,7 @@ export function LinkLanding() {
           klas: payload.klas,
           token: payload.token,
           linkGeopend: false,
-          ingediend: false,
-          heropend: false
+          ingediend: false
         }
       : undefined)
   const stage = student ? stages[student.stageId] ?? payload?.stage : undefined

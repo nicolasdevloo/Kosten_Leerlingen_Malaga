@@ -9,7 +9,6 @@ import type { KlasCode, Student } from '@/types'
 import { Chip } from '@/components/ui/Chip'
 import { Badge } from '@/components/ui/Badge'
 import { ReceiptThumb } from '@/components/ui/ReceiptThumb'
-import { buildReopenLink } from '@/lib/linkPayload'
 
 type StatusFilter = 'Alle' | 'Ingediend' | 'Nog niet ingediend' | 'Onvolledig'
 
@@ -23,11 +22,9 @@ export function ClassOverview() {
   const stage = useStore(primaryStage)
   const students = useStore((s) => s.students)
   const receipts = useStore((s) => s.receipts)
-  const reopenDossier = useStore((s) => s.reopenDossier)
   const [klas, setKlas] = useState<KlasCode | 'alle'>('alle')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Alle')
   const [openId, setOpenId] = useState<string | null>(null)
-  const [reopenCopied, setReopenCopied] = useState(false)
 
   const allInStage = useStore((s) => classStudents(s, stage?.id ?? ''))
   const byKlas = klas === 'alle' ? allInStage : allInStage.filter((s) => s.klas === klas)
@@ -65,14 +62,6 @@ export function ClassOverview() {
 
   const klasCounts = KLASSEN.map((k) => ({ k, n: allInStage.filter((s) => s.klas === k).length }))
   const dayNum = currentStageDay(stage)
-
-  const reopen = (student: Student) => {
-    reopenDossier(student.id)
-    navigator.clipboard.writeText(buildReopenLink(student.token)).then(() => {
-      setReopenCopied(true)
-      setTimeout(() => setReopenCopied(false), 3000)
-    })
-  }
 
   return (
     <>
@@ -143,7 +132,7 @@ export function ClassOverview() {
                         style={{ width: `${pct}%`, background: over ? 'oklch(0.70 0.15 62)' : 'oklch(0.62 0.15 152)' }}
                       />
                     </div>
-                    <div className="text-[11.5px] text-black/45">{Math.round(pct)}% van €420</div>
+                    <div className="text-[11.5px] text-black/45">{Math.round(pct)}% van {formatCents(stage.totaalBudgetCents)}</div>
                   </div>
                   <div className="w-[100px] text-right pr-4 text-[14.5px] font-bold tabular-nums">{formatCents(spent)}</div>
                   <div className="w-[140px] flex justify-end">
@@ -231,22 +220,10 @@ export function ClassOverview() {
               >
                 Dossier exporteren als PDF
               </Link>
-              {open.ingediend && (
-                <>
-                  <button
-                    onClick={() => reopen(open)}
-                    className="border border-black/[.14] rounded-[10px] py-3 text-center text-[13.5px] font-semibold"
-                  >
-                    {reopenCopied ? 'Heropenlink gekopieerd ✓' : 'Heropenen voor de leerling'}
-                  </button>
-                  <div className="text-[11.5px] leading-[1.45] text-black/45">
-                    Kopieert een heropenlink — stuur die door (bv. WhatsApp of mail) zodat {open.naam.split(' ')[0]} hem op zijn eigen
-                    toestel opent en zelf weer kan aanvullen. Er is geen server die dit automatisch doorstuurt.
-                  </div>
-                </>
-              )}
               <div className="text-[11.5px] leading-[1.45] text-black/45">
-                Leerlingen zien enkel hun eigen bonnetjes. Deze weergave is alleen voor begeleiders.
+                {open.ingediend
+                  ? 'Al ingediend — een leerling kan zijn dossierbestand gerust nog eens opnieuw doorsturen. Gebruik gewoon de laatste versie die je ontvangt als definitief.'
+                  : 'Leerlingen zien enkel hun eigen bonnetjes. Deze weergave is alleen voor begeleiders.'}
               </div>
             </div>
           </div>

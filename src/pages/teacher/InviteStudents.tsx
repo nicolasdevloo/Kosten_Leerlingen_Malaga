@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore, classStudents, primaryStage } from '@/data/store'
+import { formatCents } from '@/lib/money'
 import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { KLASSEN } from '@/types'
 import type { KlasCode } from '@/types'
@@ -79,10 +80,11 @@ export function InviteStudents() {
     })
   }
 
+  const dagToelage = formatCents(stage.dagToelageCents)
   const end = stage.startDatum ? stageEndDate(stage.startDatum, stage.aantalDagen) : null
   const periodNote = stage.startDatum
-    ? `${stage.aantalDagen} stagedagen, van ${formatShortDate(stage.startDatum)} tot ${formatShortDateYear(end!)}. De app rekent de dagtoelage van €30 per dag af binnen deze periode; bonnetjes van buiten de periode worden apart gemarkeerd.`
-    : 'Kies de eerste stagedag zodra die vastligt. Zolang er geen datum staat, kunnen leerlingen al bonnetjes toevoegen — die krijgen de datum van de foto en schuiven mee zodra jij de periode invult.'
+    ? `${stage.aantalDagen} stagedagen, van ${formatShortDate(stage.startDatum)} tot ${formatShortDateYear(end!)}. De app rekent de dagtoelage van ${dagToelage} per dag af binnen deze periode; bonnetjes van buiten de periode worden apart gemarkeerd.`
+    : `Aantal dagen staat op ${stage.aantalDagen} (totaalbudget ${formatCents(stage.totaalBudgetCents)}), maar er is nog geen eerste stagedag gekozen — vul hierboven ook een datum in om de periode vast te leggen. Zolang die ontbreekt, kunnen leerlingen al bonnetjes toevoegen — die krijgen de datum van de foto en schuiven mee zodra jij de periode invult.`
 
   const opened = klasStudents.filter((s) => s.linkGeopend).length
 
@@ -202,7 +204,9 @@ export function InviteStudents() {
                 >
                   {namesToImport.length} leerlingen toevoegen aan {klas}
                 </button>
-                <div className="text-[12.5px] text-black/50">elk met €420 totaal en €30 per dag</div>
+                <div className="text-[12.5px] text-black/50">
+                  elk met {formatCents(stage.totaalBudgetCents)} totaal en {dagToelage} per dag
+                </div>
               </div>
             </div>
           )}

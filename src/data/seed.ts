@@ -11,16 +11,18 @@ export interface SeedResult {
  * zonder leerlingen. De leerkracht voegt de echte leerlingen toe via "Leerlingen uitnodigen".
  */
 export function buildSeed(): SeedResult {
+  const dagToelageCents = 3000
+  const aantalDagen = 6
   const stage: Stage = {
     id: 'stage_malaga2027',
     naam: 'Málaga 2027',
     bestemming: 'Málaga',
-    school: 'Sint-Jozefinstituut',
+    school: 'Burgerschool Roeselare',
     begeleider: 'meneer Devloo',
-    totaalBudgetCents: 42000,
-    dagToelageCents: 3000,
+    totaalBudgetCents: dagToelageCents * aantalDagen,
+    dagToelageCents,
     startDatum: null,
-    aantalDagen: 6
+    aantalDagen
   }
 
   return { stage, students: [], receipts: [] }

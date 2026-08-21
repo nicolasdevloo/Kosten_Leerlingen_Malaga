@@ -97,28 +97,14 @@ export function Submit() {
         </>
       )}
 
-      {!hasGaps && !student.ingediend && (
+      {!hasGaps && (
         <>
           <div className="bg-good-soft rounded-xl px-[18px] py-4 text-[13.5px] leading-[1.5] text-good-text">
-            Alles is compleet. Je kan je dossier nu doorsturen naar {stage.begeleider}.
-          </div>
-          <Button variant="dark" full onClick={() => submitDossier(student.id)} className="!py-4 rounded-full">
-            Dossier versturen
-          </Button>
-        </>
-      )}
-
-      {student.ingediend && (
-        <>
-          <div className="bg-good-soft rounded-2xl p-5 flex flex-col gap-2 animate-pop">
-            <div className="text-base font-bold text-good-text">Afgerond</div>
-            <div className="text-[13.5px] leading-[1.5] text-good-text">
-              Je kan niets meer wijzigen aan je bonnetjes — vraag {stage.begeleider} om je dossier te heropenen als er nog iets moet
-              veranderen.
-            </div>
+            Alles is compleet. Stuur je dossier door naar {stage.begeleider} — dat mag je zo vaak doen als nodig, bv. als je nog een
+            bonnetje toevoegt. {stage.begeleider} gebruikt gewoon de laatste versie die binnenkomt als definitief.
           </div>
           <div className="bg-white rounded-2xl p-[18px] flex flex-col gap-3">
-            <div className="text-[13.5px] font-semibold">Nu nog zelf bezorgen aan {stage.begeleider}</div>
+            <div className="text-[13.5px] font-semibold">Bezorg je dossier aan {stage.begeleider}</div>
             <div className="text-[12.5px] leading-[1.5] text-black/50">
               Er is geen automatische verzending — jij stuurt dit zelf door, bv. via WhatsApp of e-mail.
             </div>
@@ -130,8 +116,16 @@ export function Submit() {
             >
               PDF bekijken en opslaan
             </Link>
-            <Button variant="dark" full onClick={() => shareDossierFile(student, stage, receipts)} className="!py-3.5 rounded-full">
-              Dossierbestand delen
+            <Button
+              variant="dark"
+              full
+              onClick={() => {
+                submitDossier(student.id)
+                shareDossierFile(student, stage, receipts)
+              }}
+              className="!py-3.5 rounded-full"
+            >
+              {student.ingediend ? 'Dossierbestand opnieuw delen' : 'Dossierbestand delen'}
             </Button>
             <div className="text-[11.5px] leading-[1.45] text-black/40">
               De PDF is voor de Erasmus+-papieren. Het dossierbestand laat {stage.begeleider} jouw bonnetjes ook in zijn dashboard
