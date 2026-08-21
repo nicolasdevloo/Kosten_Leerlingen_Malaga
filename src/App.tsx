@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useStore } from '@/data/store'
 import { Home } from '@/pages/Home'
 import { LinkLanding } from '@/pages/link/LinkLanding'
+import { ReopenLink } from '@/pages/link/ReopenLink'
 import { StudentShell } from '@/pages/student/StudentShell'
 import { Dashboard } from '@/pages/student/Dashboard'
 import { ReceiptList } from '@/pages/student/ReceiptList'
@@ -33,6 +34,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/y/:token" element={<LinkLanding />} />
+      <Route path="/heropen/:token" element={<ReopenLink />} />
 
       <Route path="/app" element={<StudentShell />}>
         <Route index element={<Dashboard />} />

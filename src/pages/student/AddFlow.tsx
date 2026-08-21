@@ -43,7 +43,10 @@ export function AddFlow() {
           return
         }
         streamRef.current = stream
-        if (videoRef.current) videoRef.current.srcObject = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(() => {})
+        }
         setCameraReady(true)
       })
       .catch(() => setCameraReady(false))
@@ -168,9 +171,17 @@ export function AddFlow() {
       {step === 'choice' && (
         <div className="flex flex-col gap-4">
           <div className="relative rounded-xl border border-white/[.14] h-[400px] overflow-hidden flex flex-col items-center justify-center gap-3">
-            {cameraReady ? (
-              <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
-            ) : (
+            {/* Altijd gemonteerd (i.p.v. pas na cameraReady), anders bestaat videoRef.current nog niet
+                op het moment dat getUserMedia klaar is en blijft de stream onzichtbaar hangen. */}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: cameraReady ? 1 : 0 }}
+            />
+            {!cameraReady && (
               <div
                 className="absolute inset-0"
                 style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px)' }}

@@ -28,6 +28,7 @@ interface AppState {
 
   submitDossier: (studentId: string) => void
   reopenDossier: (studentId: string) => void
+  reopenByToken: (token: string) => boolean
   renameStudent: (studentId: string, naam: string) => void
 
   updateStagePeriod: (stageId: string, startDatum: string | null, aantalDagen: number) => void
@@ -117,6 +118,19 @@ export const useStore = create<AppState>()(
           if (!s) return state
           return { students: { ...state.students, [studentId]: { ...s, ingediend: false, heropend: true } } }
         })
+      },
+
+      // Voor de leerling zelf, via de heropen-link die de leerkracht doorstuurt: er is geen server
+      // die het toestel van de leerkracht en dat van de leerling rechtstreeks kan laten praten.
+      reopenByToken: (token) => {
+        let found = false
+        set((state) => {
+          const s = Object.values(state.students).find((st) => st.token === token)
+          if (!s) return state
+          found = true
+          return { students: { ...state.students, [s.id]: { ...s, ingediend: false, heropend: true } } }
+        })
+        return found
       },
 
       renameStudent: (studentId, naam) => {
