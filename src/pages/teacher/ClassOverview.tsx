@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore, classStudents, primaryStage } from '@/data/store'
 import { currentStageDay, groupByDay, incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
-import { formatShortDate } from '@/lib/date'
+import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { KLASSEN } from '@/types'
 import type { KlasCode, Student } from '@/types'
 import { Chip } from '@/components/ui/Chip'
@@ -62,6 +62,14 @@ export function ClassOverview() {
 
   const klasCounts = KLASSEN.map((k) => ({ k, n: allInStage.filter((s) => s.klas === k).length }))
   const dayNum = currentStageDay(stage)
+  // "dag X van Y" enkel terwijl de stage echt loopt; vóór of na de periode (bv. nu, de stage begint
+  // pas in januari) toont de werkelijke datums i.p.v. de misleidende "periode niet vastgelegd" —
+  // die periode IS vastgelegd, we zitten er gewoon nog niet in.
+  const periodLabel = stage.startDatum
+    ? dayNum
+      ? `dag ${dayNum} van ${stage.aantalDagen}`
+      : `${formatShortDate(stage.startDatum)} – ${formatShortDateYear(stageEndDate(stage.startDatum, stage.aantalDagen))}`
+    : 'periode nog niet vastgelegd'
 
   return (
     <>
@@ -70,7 +78,7 @@ export function ClassOverview() {
           <div className="flex flex-col gap-[3px]">
             <div className="text-[22px] font-bold tracking-[-0.4px]">{stage.naam}</div>
             <div className="text-[13px] text-black/50">
-              {klas === 'alle' ? 'Alle klassen' : klas} · {dayNum ? `dag ${dayNum} van ${stage.aantalDagen}` : 'periode niet vastgelegd'} ·{' '}
+              {klas === 'alle' ? 'Alle klassen' : klas} · {periodLabel} ·{' '}
               {formatCents(stage.totaalBudgetCents)} per leerling
             </div>
           </div>

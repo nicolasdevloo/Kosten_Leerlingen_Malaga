@@ -10,7 +10,7 @@ import {
   totalSpent
 } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
-import { formatRelative } from '@/lib/date'
+import { formatRelative, formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { Card } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ReceiptThumb } from '@/components/ui/ReceiptThumb'
@@ -33,6 +33,13 @@ export function Dashboard() {
   const pending = pendingReceipts(receipts)
   const gaps = incompleteReceipts(receipts)
   const daysLeft = dayNum ? Math.max(0, stage.aantalDagen - dayNum) : stage.aantalDagen
+  // "Dag X van Y" enkel terwijl de stage echt loopt; vóór of na de periode toont de werkelijke
+  // datums i.p.v. de misleidende "periode nog niet vastgelegd" — die periode staat wel degelijk vast.
+  const periodLabel = stage.startDatum
+    ? dayNum
+      ? `Dag ${dayNum} van ${stage.aantalDagen}`
+      : `${formatShortDate(stage.startDatum)} – ${formatShortDateYear(stageEndDate(stage.startDatum, stage.aantalDagen))}`
+    : 'Periode nog niet vastgelegd'
 
   const coach = over
     ? 'Je toelage van vandaag is op. Wat je nu nog uitgeeft, gaat rechtstreeks van je totaalbudget af.'
@@ -43,7 +50,7 @@ export function Dashboard() {
       <div className="flex flex-col gap-0.5">
         <h1 className="text-[22px] font-bold tracking-[-0.4px]">Hoi {student.naam.split(' ')[0]}</h1>
         <div className="text-[13px] text-black/50">
-          {dayNum ? `Dag ${dayNum} van ${stage.aantalDagen}` : 'Periode nog niet vastgelegd'} · {stage.bestemming}
+          {periodLabel} · {stage.bestemming}
         </div>
       </div>
 
