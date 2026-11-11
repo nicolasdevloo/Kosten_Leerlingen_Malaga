@@ -26,7 +26,6 @@ export function Profile() {
   const { student, stage } = useSession()
   const receipts = useStore((s) => (student ? studentReceipts(s, student.id) : []))
   const [reminder, setReminder] = useState(true)
-  const [ocr, setOcr] = useState(true)
   if (!student || !stage) return null
 
   const totals = categoryTotals(receipts)
@@ -90,13 +89,9 @@ export function Profile() {
       </Card>
 
       <Card className="overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-[15px] border-b border-black/[.06]">
+        <div className="flex justify-between items-center px-4 py-[15px]">
           <div className="text-sm">Herinnering om 20:00</div>
           <Toggle on={reminder} onClick={() => setReminder((v) => !v)} />
-        </div>
-        <div className="flex justify-between items-center px-4 py-[15px]">
-          <div className="text-sm">Bedrag lezen uit foto</div>
-          <Toggle on={ocr} onClick={() => setOcr((v) => !v)} />
         </div>
       </Card>
 

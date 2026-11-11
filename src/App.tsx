@@ -11,6 +11,7 @@ import { AddFlow } from '@/pages/student/AddFlow'
 import { Submit } from '@/pages/student/Submit'
 import { Profile } from '@/pages/student/Profile'
 import { TeacherShell } from '@/pages/teacher/TeacherShell'
+import { TeacherGate } from '@/pages/teacher/TeacherGate'
 import { ClassOverview } from '@/pages/teacher/ClassOverview'
 import { InviteStudents } from '@/pages/teacher/InviteStudents'
 import { Dossier } from '@/pages/dossier/Dossier'
@@ -31,7 +32,14 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={
+          <TeacherGate>
+            <Home />
+          </TeacherGate>
+        }
+      />
       <Route path="/y/:token" element={<LinkLanding />} />
 
       <Route path="/app" element={<StudentShell />}>
@@ -43,15 +51,36 @@ export default function App() {
       </Route>
       <Route path="/app/toevoegen" element={<AddFlow />} />
 
-      <Route path="/leerkracht" element={<TeacherShell />}>
+      <Route
+        path="/leerkracht"
+        element={
+          <TeacherGate>
+            <TeacherShell />
+          </TeacherGate>
+        }
+      >
         <Route index element={<ClassOverview />} />
         <Route path="leerlingen" element={<InviteStudents />} />
       </Route>
 
-      <Route path="/dossier/klas/:klas" element={<DossierKlas />} />
+      <Route
+        path="/dossier/klas/:klas"
+        element={
+          <TeacherGate>
+            <DossierKlas />
+          </TeacherGate>
+        }
+      />
       <Route path="/dossier/:studentId" element={<Dossier />} />
 
-      <Route path="*" element={<Home />} />
+      <Route
+        path="*"
+        element={
+          <TeacherGate>
+            <Home />
+          </TeacherGate>
+        }
+      />
     </Routes>
   )
 }

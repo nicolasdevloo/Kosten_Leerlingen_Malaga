@@ -23,7 +23,6 @@ export function AddFlow() {
 
   const [step, setStep] = useState<Step>('choice')
   const [photo, setPhoto] = useState<string | null>(null)
-  const [ocrLine, setOcrLine] = useState('')
   const [amountInput, setAmountInput] = useState('')
   const [categorie, setCategorie] = useState<Categorie | null>(null)
   const [note, setNote] = useState('')
@@ -65,10 +64,6 @@ export function AddFlow() {
 
   const applyPhoto = (dataUrl: string) => {
     setPhoto(dataUrl)
-    // Simulatie van OCR: een plausibel bedrag wordt voorgesteld, de leerling corrigeert het zo nodig.
-    const guessed = Math.round((3 + Math.random() * 15) * 100)
-    setAmountInput((guessed / 100).toFixed(2).replace('.', ','))
-    setOcrLine(`Ik las ${formatCents(guessed)} op de foto. Klopt dat?`)
     setStep('review')
   }
 
@@ -143,7 +138,6 @@ export function AddFlow() {
   const reset = () => {
     setStep('choice')
     setPhoto(null)
-    setOcrLine('')
     setAmountInput('')
     setCategorie(null)
     setNote('')
@@ -216,12 +210,6 @@ export function AddFlow() {
 
       {step === 'review' && (
         <div className="flex flex-col gap-4">
-          {ocrLine && (
-            <div className="bg-accent-lightest rounded-xl px-4 py-3.5 flex gap-[11px] items-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-accent flex-none" />
-              <div className="text-[13px] leading-[1.45] text-accent-darker">{ocrLine}</div>
-            </div>
-          )}
           <div className="bg-white rounded-[22px] p-[18px] flex flex-col gap-4">
             <div className="flex gap-3.5 items-start">
               {photo ? (
@@ -240,7 +228,7 @@ export function AddFlow() {
                   placeholder="0,00"
                   inputMode="decimal"
                   className="text-[30px] font-extrabold tracking-[-1px] border-none outline-none w-full p-0 bg-transparent tabular-nums"
-                  autoFocus={!photo}
+                  autoFocus
                 />
                 <div className="text-xs text-black/45">
                   {amountCents > 0 ? `dat is ${formatCents(amountCents)} — controleer of dat klopt` : 'tik om het bedrag in te vullen'}

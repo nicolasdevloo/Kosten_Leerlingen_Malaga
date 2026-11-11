@@ -20,17 +20,27 @@ function computeDagToelage(totaalBudgetCents: number, reisdagToelageCents: numbe
   return Math.max(0, Math.round(totaalBudgetCents / Math.max(1, aantalDagen)))
 }
 
+/**
+ * Enkel een lokaal, zacht slot — er is geen server om een echt account te verifiëren. Een leerling
+ * die zijn eigen link opent, komt deze code nergens tegen; op het toestel van de begeleider zelf
+ * wordt het onthouden na de eerste keer.
+ */
+const TEACHER_PIN = '6221'
+
 interface AppState {
   stages: Record<string, Stage>
   students: Record<string, Student>
   receipts: Record<string, Bonnetje>
   /** token van de leerling die op dit toestel is aangemeld (de "sessie": geen wachtwoord, de link is de sessie). */
   sessionToken: string | null
+  /** true zodra op dit toestel de juiste leerkrachtencode is ingevoerd. */
+  teacherUnlocked: boolean
   hydrated: boolean
 
   setHydrated: () => void
   confirmSession: (token: string) => void
   clearSession: () => void
+  unlockTeacher: (pin: string) => boolean
 
   addReceipt: (studentId: string, data: Omit<Bonnetje, 'id' | 'studentId'>) => Bonnetje
   setReceiptCategory: (receiptId: string, categorie: Categorie) => void
@@ -59,9 +69,16 @@ export const useStore = create<AppState>()(
       students: {},
       receipts: {},
       sessionToken: null,
+      teacherUnlocked: false,
       hydrated: false,
 
       setHydrated: () => set({ hydrated: true }),
+
+      unlockTeacher: (pin) => {
+        const ok = pin === TEACHER_PIN
+        if (ok) set({ teacherUnlocked: true })
+        return ok
+      },
 
       confirmSession: (token) => {
         const student = Object.values(get().students).find((s) => s.token === token)
