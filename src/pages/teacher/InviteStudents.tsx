@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore, classStudents, primaryStage } from '@/data/store'
-import { formatCents } from '@/lib/money'
+import { formatCents, parseCentsInput } from '@/lib/money'
 import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { KLASSEN } from '@/types'
 import type { KlasCode } from '@/types'
@@ -20,6 +20,7 @@ function parseNamesFromFile(text: string): string[] {
 export function InviteStudents() {
   const stage = useStore(primaryStage)
   const updateStagePeriod = useStore((s) => s.updateStagePeriod)
+  const updateStageBudget = useStore((s) => s.updateStageBudget)
   const importStudents = useStore((s) => s.importStudents)
   const regenerateToken = useStore((s) => s.regenerateToken)
   const deleteStudent = useStore((s) => s.deleteStudent)
@@ -32,6 +33,7 @@ export function InviteStudents() {
   const [dragOver, setDragOver] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [qrStudent, setQrStudent] = useState<{ naam: string; klas: KlasCode; token: string } | null>(null)
+  const [budgetInput, setBudgetInput] = useState(() => (stage ? (stage.totaalBudgetCents / 100).toFixed(2).replace('.', ',') : ''))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const klasStudents = useMemo(() => allInStage.filter((s) => s.klas === klas), [allInStage, klas])
@@ -78,6 +80,13 @@ export function InviteStudents() {
       setCopiedId(s.id)
       setTimeout(() => setCopiedId((id) => (id === s.id ? null : id)), 1500)
     })
+  }
+
+  const commitBudget = () => {
+    const cents = parseCentsInput(budgetInput)
+    const finalCents = cents > 0 ? cents : stage.totaalBudgetCents
+    if (cents > 0) updateStageBudget(stage.id, cents)
+    setBudgetInput((finalCents / 100).toFixed(2).replace('.', ','))
   }
 
   const dagToelage = formatCents(stage.dagToelageCents)
@@ -133,6 +142,24 @@ export function InviteStudents() {
               <div className="flex flex-col gap-1.5">
                 <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45">laatste stagedag</div>
                 <div className="text-sm font-semibold py-2">{end ? formatShortDateYear(end) : '—'}</div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45">totaalbudget per leerling</div>
+                <div className="flex items-center gap-1.5 border border-black/[.16] rounded-[9px] px-2.5 py-2 bg-white">
+                  <span className="text-sm font-semibold text-black/45">€</span>
+                  <input
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(e.target.value)}
+                    onBlur={commitBudget}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                    inputMode="decimal"
+                    className="text-sm font-semibold outline-none w-[70px] bg-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45">dagtoelage</div>
+                <div className="text-sm font-semibold py-2">{dagToelage} / dag</div>
               </div>
             </div>
             <div className="text-[12.5px] leading-[1.55] text-black/50">{periodNote}</div>

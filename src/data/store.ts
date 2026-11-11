@@ -30,6 +30,7 @@ interface AppState {
   renameStudent: (studentId: string, naam: string) => void
 
   updateStagePeriod: (stageId: string, startDatum: string | null, aantalDagen: number) => void
+  updateStageBudget: (stageId: string, totaalBudgetCents: number) => void
   importStudents: (stageId: string, klas: KlasCode, namen: string[]) => Student[]
   regenerateToken: (studentId: string) => string
   deleteStudent: (studentId: string) => void
@@ -121,6 +122,8 @@ export const useStore = create<AppState>()(
         })
       },
 
+      // Het totaalbudget is het echte, vaste bedrag (bv. een Erasmus+-subsidie); de dagtoelage is
+      // daar gewoon een afgeleide van (totaal / aantal dagen), vooral om per dag te waarschuwen.
       updateStagePeriod: (stageId, startDatum, aantalDagen) => {
         set((state) => {
           const stage = state.stages[stageId]
@@ -128,7 +131,20 @@ export const useStore = create<AppState>()(
           return {
             stages: {
               ...state.stages,
-              [stageId]: { ...stage, startDatum, aantalDagen, totaalBudgetCents: stage.dagToelageCents * aantalDagen }
+              [stageId]: { ...stage, startDatum, aantalDagen, dagToelageCents: Math.round(stage.totaalBudgetCents / aantalDagen) }
+            }
+          }
+        })
+      },
+
+      updateStageBudget: (stageId, totaalBudgetCents) => {
+        set((state) => {
+          const stage = state.stages[stageId]
+          if (!stage) return state
+          return {
+            stages: {
+              ...state.stages,
+              [stageId]: { ...stage, totaalBudgetCents, dagToelageCents: Math.round(totaalBudgetCents / stage.aantalDagen) }
             }
           }
         })
