@@ -7,7 +7,13 @@ import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import type { Bonnetje } from '@/types'
 
 export function DossierContent({ student, stage, receipts }: { student: Student; stage: Stage; receipts: Bonnetje[] }) {
+  // groupByDay sorteert nieuwste dag (en daarbinnen het laatste bonnetje) eerst — handig voor het
+  // levende dashboard; een officieel dossier voor Erasmus+ leest net chronologisch, dus hier
+  // draaien we dag- en bonvolgorde allebei om.
   const days = groupByDay(receipts, stage)
+    .slice()
+    .reverse()
+    .map((d) => ({ ...d, receipts: d.receipts.slice().reverse() }))
   const total = totalSpent(receipts)
   const rest = stage.totaalBudgetCents - total
   const totals = categoryTotals(receipts)
@@ -135,16 +141,19 @@ export function DossierContent({ student, stage, receipts }: { student: Student;
       <p className="text-[9.5pt] leading-[1.6] mb-3 text-black/65">
         Elke foto draagt hetzelfde nummer als in de tabel hierboven, met datum, bedrag en categorie eronder.
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 items-start">
         {numbered.flatMap((d) =>
           d.receipts.map((r) => (
             <div key={r.id} className="break-inside-avoid">
-              <div className="aspect-[3/4] border border-black/25 overflow-hidden flex items-center justify-center font-mono text-[8pt] text-black/50 bg-black/[.03]">
+              <div
+                className="w-full border border-black/25 overflow-hidden flex items-center justify-center font-mono text-[8pt] text-black/50 bg-black/[.03]"
+                style={{ minHeight: '140px', maxHeight: '280px' }}
+              >
                 {r.fotoDataUrl ? (
-                  <img src={r.fotoDataUrl} alt="" className="w-full h-full object-contain" />
+                  <img src={r.fotoDataUrl} alt="" className="w-full h-auto max-h-[280px] object-contain" />
                 ) : (
                   <div
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-[180px] flex items-center justify-center"
                     style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(20,21,26,.08) 0 5px, transparent 5px 10px)' }}
                   >
                     foto B-{String(r.nr).padStart(2, '0')}

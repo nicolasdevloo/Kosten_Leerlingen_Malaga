@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useStore } from '@/data/store'
 import { Home } from '@/pages/Home'
 import { LinkLanding } from '@/pages/link/LinkLanding'
@@ -19,6 +19,7 @@ import { DossierKlas } from '@/pages/dossier/DossierKlas'
 
 export default function App() {
   const hydrated = useStore((s) => s.hydrated)
+  const sessionToken = useStore((s) => s.sessionToken)
 
   useEffect(() => {
     document.title = 'Stagekosten Málaga'
@@ -30,16 +31,20 @@ export default function App() {
     )
   }
 
+  // Een leerling zet de app op zijn beginscherm; dat icoon negeert welke pagina er open was en
+  // start altijd op de kale rootlink. Een leerling die al eens bevestigde, moet daar meteen
+  // naar zijn eigen dashboard gaan — niet naar de leerkrachtenlauncher of de PIN-vraag.
+  const rootElement = sessionToken ? (
+    <Navigate to="/app" replace />
+  ) : (
+    <TeacherGate>
+      <Home />
+    </TeacherGate>
+  )
+
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <TeacherGate>
-            <Home />
-          </TeacherGate>
-        }
-      />
+      <Route path="/" element={rootElement} />
       <Route path="/y/:token" element={<LinkLanding />} />
 
       <Route path="/app" element={<StudentShell />}>
@@ -73,14 +78,7 @@ export default function App() {
       />
       <Route path="/dossier/:studentId" element={<Dossier />} />
 
-      <Route
-        path="*"
-        element={
-          <TeacherGate>
-            <Home />
-          </TeacherGate>
-        }
-      />
+      <Route path="*" element={rootElement} />
     </Routes>
   )
 }
