@@ -90,50 +90,53 @@ export function LinkLanding() {
 
   if (step === 'addHome') {
     const platform = detectPlatform()
-    const steps =
+    const iosSteps = [
+      { n: 1, text: 'Tik onderaan op het deelicoon (vierkantje met pijltje omhoog)' },
+      {
+        n: 2,
+        text: (
+          <>
+            Scroll naar onder en kies <strong>Zet op beginscherm</strong>
+          </>
+        )
+      },
+      {
+        n: 3,
+        text: (
+          <>
+            Tik rechtsboven op <strong>Voeg toe</strong>
+          </>
+        )
+      }
+    ]
+    const androidSteps = [
+      { n: 1, text: 'Tik rechtsboven op de drie puntjes (⋮) in je browser' },
+      {
+        n: 2,
+        text: (
+          <>
+            Kies <strong>App installeren</strong> (of <strong>Toevoegen aan startscherm</strong>)
+          </>
+        )
+      },
+      {
+        n: 3,
+        text: (
+          <>
+            Tik op <strong>Installeren</strong> om te bevestigen
+          </>
+        )
+      }
+    ]
+    const groups =
       platform === 'android'
         ? [
-            { n: 1, text: <>Tik rechtsboven op de drie puntjes (⋮) in je browser</> },
-            {
-              n: 2,
-              text: (
-                <>
-                  Kies <strong>App installeren</strong> (of <strong>Toevoegen aan startscherm</strong>)
-                </>
-              )
-            },
-            {
-              n: 3,
-              text: (
-                <>
-                  Tik op <strong>Installeren</strong> om te bevestigen
-                </>
-              )
-            }
-          ]
-        : platform === 'ios'
-        ? [
-            { n: 1, text: 'Tik onderaan op het deelicoon (vierkantje met pijltje omhoog)' },
-            {
-              n: 2,
-              text: (
-                <>
-                  Scroll naar onder en kies <strong>Zet op beginscherm</strong>
-                </>
-              )
-            },
-            {
-              n: 3,
-              text: (
-                <>
-                  Tik rechtsboven op <strong>Voeg toe</strong>
-                </>
-              )
-            }
+            { label: 'Op Android', steps: androidSteps },
+            { label: 'Op iPhone', steps: iosSteps }
           ]
         : [
-            { n: 1, text: 'Open deze link op je telefoon (iPhone of Android) om hem op je beginscherm te zetten' },
-            { n: 2, text: 'Of bewaar deze pagina als bladwijzer in je browser' }
+            { label: 'Op iPhone', steps: iosSteps },
+            { label: 'Op Android', steps: androidSteps }
           ]
     return (
       <div className="min-h-screen max-w-[480px] mx-auto bg-app px-6 pt-16 pb-8 flex flex-col gap-[22px]">
@@ -141,13 +144,23 @@ export function LinkLanding() {
         <div className="text-[13.5px] leading-[1.55] text-black/60">
           Dan hoef je de link niet elke keer terug te zoeken. Je blijft aangemeld, ook zonder internet in Spanje.
         </div>
-        <div className="bg-white rounded-2xl px-[18px] py-1.5 shadow-card">
-          {steps.map((s, i) => (
-            <div key={s.n} className={`flex gap-3.5 items-start py-4 ${i < steps.length - 1 ? 'border-b border-black/[.07]' : ''}`}>
-              <div className="w-[26px] h-[26px] rounded-[9px] bg-accent-lighter flex-none flex items-center justify-center text-[13px] font-bold text-accent-darker">
-                {s.n}
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-2">
+              <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45 px-1">{group.label}</div>
+              <div className="bg-white rounded-2xl px-[18px] py-1.5 shadow-card">
+                {group.steps.map((s, i) => (
+                  <div
+                    key={s.n}
+                    className={`flex gap-3.5 items-start py-4 ${i < group.steps.length - 1 ? 'border-b border-black/[.07]' : ''}`}
+                  >
+                    <div className="w-[26px] h-[26px] rounded-[9px] bg-accent-lighter flex-none flex items-center justify-center text-[13px] font-bold text-accent-darker">
+                      {s.n}
+                    </div>
+                    <div className="text-sm leading-[1.5]">{s.text}</div>
+                  </div>
+                ))}
               </div>
-              <div className="text-sm leading-[1.5]">{s.text}</div>
             </div>
           ))}
         </div>
