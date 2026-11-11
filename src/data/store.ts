@@ -281,6 +281,26 @@ export const useStore = create<AppState>()(
     {
       name: 'stagekosten-store-v1',
       storage: createJSONStorage(() => idbStorage),
+      // Versie 1: zet de echte, definitieve stage-gegevens voor Málaga 2027 vast (24/01–6/02/2027,
+      // €390 totaal, €15 op de reisdagen, €30 op de dagen ertussen) op elk toestel dat de stage al
+      // lokaal had — inclusief toestellen die nog van vóór de reisdagtoelage dateren. Draait precies
+      // één keer per toestel; latere aanpassingen door de leerkracht via het dashboard blijven staan.
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as { stages?: Record<string, Stage> } | undefined
+        const stage = state?.stages?.['stage_malaga2027']
+        if (state?.stages && stage) {
+          state.stages['stage_malaga2027'] = {
+            ...stage,
+            startDatum: '2027-01-24',
+            aantalDagen: 14,
+            dagToelageCents: 3000,
+            reisdagToelageCents: 1500,
+            totaalBudgetCents: 39000
+          }
+        }
+        return state
+      },
       onRehydrateStorage: () => (state) => {
         if (state && Object.keys(state.stages).length === 0) {
           const seed = buildSeed()
@@ -290,17 +310,6 @@ export const useStore = create<AppState>()(
           const receipts: Record<string, Bonnetje> = {}
           for (const r of seed.receipts) receipts[r.id] = r
           Object.assign(state, { stages, students, receipts })
-        } else if (state) {
-          // Migratie voor toestellen die hun stage al lokaal bewaarden vóór de reisdagtoelage
-          // bestond: zonder dit blijft dat veld undefined en telt een reisdag nergens mee.
-          const stages: Record<string, Stage> = {}
-          for (const [id, stage] of Object.entries(state.stages)) {
-            stages[id] =
-              typeof stage.reisdagToelageCents === 'number'
-                ? stage
-                : { ...stage, reisdagToelageCents: Math.round(stage.dagToelageCents / 2) }
-          }
-          state.stages = stages
         }
         state?.setHydrated()
       }
