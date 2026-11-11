@@ -5,6 +5,7 @@ import { formatCents } from '@/lib/money'
 import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { capitalizeFirst } from '@/lib/text'
 import { decodeLinkPayload } from '@/lib/linkPayload'
+import { detectPlatform } from '@/lib/platform'
 
 type Step = 'confirm' | 'wrong' | 'addHome'
 
@@ -88,11 +89,52 @@ export function LinkLanding() {
   }
 
   if (step === 'addHome') {
-    const steps = [
-      { n: 1, text: 'Tik op het deelicoon onderaan je browser' },
-      { n: 2, text: <>Kies <strong>Zet op beginscherm</strong></> },
-      { n: 3, text: <>Klaar — het icoon heet <strong>Stagekosten</strong></> }
-    ]
+    const platform = detectPlatform()
+    const steps =
+      platform === 'android'
+        ? [
+            { n: 1, text: <>Tik rechtsboven op de drie puntjes (⋮) in je browser</> },
+            {
+              n: 2,
+              text: (
+                <>
+                  Kies <strong>App installeren</strong> (of <strong>Toevoegen aan startscherm</strong>)
+                </>
+              )
+            },
+            {
+              n: 3,
+              text: (
+                <>
+                  Tik op <strong>Installeren</strong> om te bevestigen
+                </>
+              )
+            }
+          ]
+        : platform === 'ios'
+        ? [
+            { n: 1, text: 'Tik onderaan op het deelicoon (vierkantje met pijltje omhoog)' },
+            {
+              n: 2,
+              text: (
+                <>
+                  Scroll naar onder en kies <strong>Zet op beginscherm</strong>
+                </>
+              )
+            },
+            {
+              n: 3,
+              text: (
+                <>
+                  Tik rechtsboven op <strong>Voeg toe</strong>
+                </>
+              )
+            }
+          ]
+        : [
+            { n: 1, text: 'Open deze link op je telefoon (iPhone of Android) om hem op je beginscherm te zetten' },
+            { n: 2, text: 'Of bewaar deze pagina als bladwijzer in je browser' }
+          ]
     return (
       <div className="min-h-screen max-w-[480px] mx-auto bg-app px-6 pt-16 pb-8 flex flex-col gap-[22px]">
         <div className="text-2xl font-bold tracking-[-0.5px]">Zet de app op je beginscherm</div>
