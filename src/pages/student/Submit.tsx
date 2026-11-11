@@ -4,6 +4,7 @@ import { useStore, studentReceipts } from '@/data/store'
 import { incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
 import { buildDossierExport, dossierExportFilename } from '@/lib/dossierExport'
+import { shareOrDownloadFile } from '@/lib/shareFile'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { Student, Stage, Bonnetje } from '@/types'
@@ -12,24 +13,7 @@ async function shareDossierFile(student: Student, stage: Stage, receipts: Bonnet
   const json = JSON.stringify(buildDossierExport(student, stage, receipts), null, 2)
   const filename = dossierExportFilename(student.naam)
   const file = new File([json], filename, { type: 'application/json' })
-
-  const nav = navigator as Navigator & { canShare?: (data: { files: File[] }) => boolean }
-  if (nav.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: `Stagekosten — ${student.naam}` })
-      return
-    } catch {
-      // Leerling annuleerde het deelvenster: val terug op downloaden.
-    }
-  }
-  const url = URL.createObjectURL(file)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  await shareOrDownloadFile(file, `Stagekosten — ${student.naam}`)
 }
 
 function CheckDot({ done = true }: { done?: boolean }) {
@@ -112,24 +96,17 @@ export function Submit() {
               to={`/dossier/${student.id}`}
               target="_blank"
               rel="noreferrer"
-              className="border border-black/[.15] rounded-full py-3.5 text-center text-sm font-bold"
+              onClick={() => submitDossier(student.id)}
+              className="bg-ink rounded-full py-3.5 text-center text-sm font-bold text-white"
             >
-              PDF bekijken en opslaan
+              PDF bekijken en delen
             </Link>
-            <Button
-              variant="dark"
-              full
-              onClick={() => {
-                submitDossier(student.id)
-                shareDossierFile(student, stage, receipts)
-              }}
-              className="!py-3.5 rounded-full"
-            >
+            <Button variant="outline" full onClick={() => shareDossierFile(student, stage, receipts)} className="!py-3.5 rounded-full">
               {student.ingediend ? 'Dossierbestand opnieuw delen' : 'Dossierbestand delen'}
             </Button>
             <div className="text-[11.5px] leading-[1.45] text-black/40">
-              De PDF is voor de Erasmus+-papieren. Het dossierbestand laat {stage.begeleider} jouw bonnetjes ook in zijn dashboard
-              importeren.
+              De PDF is voor de Erasmus+-papieren — op die pagina staat een knop om ze meteen te delen. Het dossierbestand (JSON) is
+              enkel nodig als {stage.begeleider} jouw bonnetjes ook in zijn dashboard wil importeren.
             </div>
           </div>
         </>
