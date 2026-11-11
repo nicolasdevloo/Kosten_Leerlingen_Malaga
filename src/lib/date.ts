@@ -1,10 +1,16 @@
+// new Date().toISOString() geeft altijd UTC, niet de lokale datum: in de eerste uren na
+// middernacht in België (UTC+1/+2) zou dat nog de vorige dag teruggeven. Dit rekent in lokale tijd.
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// Let op: iso + 'T00:00:00' (zonder 'Z') parseert als lokale middernacht, maar toISOString()
+// geeft altijd UTC terug. In een tijdzone vóór op UTC (bv. België, UTC+1) schuift dat de datum
+// een dag terug zodra je naar ISO-string formatteert. addDays rekent daarom volledig in UTC.
 export function addDays(iso: string, days: number): string {
-  const d = new Date(iso + 'T00:00:00')
-  d.setDate(d.getDate() + days)
+  const d = new Date(iso + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + days)
   return d.toISOString().slice(0, 10)
 }
 
