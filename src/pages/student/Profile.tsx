@@ -80,6 +80,10 @@ export function Profile() {
           <div className="text-sm">Dagtoelage</div>
           <div className="text-sm font-semibold">{formatCents(stage.dagToelageCents)}</div>
         </div>
+        <div className="flex justify-between px-4 py-[15px] border-b border-black/[.06]">
+          <div className="text-sm">Toelage op aankomst- en vertrekdag</div>
+          <div className="text-sm font-semibold">{formatCents(stage.reisdagToelageCents)}</div>
+        </div>
         <div className="px-4 py-[13px] text-[12.5px] leading-[1.45] text-black/50 bg-black/[.03]">
           Ingesteld door de school. Je kan dit niet zelf aanpassen.
         </div>

@@ -60,8 +60,9 @@ export function DossierContent({ student, stage, receipts }: { student: Student;
       </table>
 
       <p className="text-[10pt] leading-[1.6] mb-3.5 text-black/70">
-        Dagtoelage {formatCents(stage.dagToelageCents)}. Het dagbudget mag overschreden worden, het totaalbudget niet. Elke uitgave in
-        dit dossier heeft een gefotografeerd bonnetje; de foto's staan in bijlage in dezelfde volgorde als de tabellen hieronder.
+        Dagtoelage {formatCents(stage.dagToelageCents)}, op de eerste en laatste stagedag (reisdagen) {formatCents(stage.reisdagToelageCents)}.
+        Het dagbudget mag overschreden worden, het totaalbudget niet. Elke uitgave in dit dossier heeft een gefotografeerd bonnetje; de
+        foto's staan in bijlage in dezelfde volgorde als de tabellen hieronder.
       </p>
 
       <h2 className="text-[12pt] font-bold mb-2">Uitgaven per dag</h2>
@@ -90,6 +91,9 @@ export function DossierContent({ student, stage, receipts }: { student: Student;
               <tr key={`${d.datum}-total`} className="bg-black/[.03]">
                 <td colSpan={4} className="border border-black/[.15] px-2 py-1.5 font-bold">
                   Dagtotaal {formatShortDate(d.datum)}
+                  {d.dagNummer !== null && (d.dagNummer === 1 || d.dagNummer === stage.aantalDagen) && (
+                    <span className="font-normal text-black/55"> (reisdag)</span>
+                  )}
                   {d.overToelageCents > 0 && (
                     <span className="font-normal text-black/55"> — {formatCents(d.overToelageCents)} boven de dagtoelage</span>
                   )}

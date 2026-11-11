@@ -14,7 +14,10 @@ export interface Stage {
   school: string
   begeleider: string
   totaalBudgetCents: number
+  /** Dagtoelage op de gewone stagedagen (dus niet de eerste/laatste, de reisdagen). */
   dagToelageCents: number
+  /** Lagere toelage op de eerste en laatste stagedag (reisdagen, geen volledige dag ter plaatse). */
+  reisdagToelageCents: number
   /** ISO-datum (yyyy-mm-dd) van de eerste stagedag, of null zolang niet vastgelegd. */
   startDatum: string | null
   aantalDagen: number

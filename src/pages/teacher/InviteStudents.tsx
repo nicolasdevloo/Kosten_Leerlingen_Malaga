@@ -21,6 +21,7 @@ export function InviteStudents() {
   const stage = useStore(primaryStage)
   const updateStagePeriod = useStore((s) => s.updateStagePeriod)
   const updateStageBudget = useStore((s) => s.updateStageBudget)
+  const updateStageReisdagToelage = useStore((s) => s.updateStageReisdagToelage)
   const importStudents = useStore((s) => s.importStudents)
   const regenerateToken = useStore((s) => s.regenerateToken)
   const deleteStudent = useStore((s) => s.deleteStudent)
@@ -34,6 +35,7 @@ export function InviteStudents() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [qrStudent, setQrStudent] = useState<{ naam: string; klas: KlasCode; token: string } | null>(null)
   const [budgetInput, setBudgetInput] = useState(() => (stage ? (stage.totaalBudgetCents / 100).toFixed(2).replace('.', ',') : ''))
+  const [reisdagInput, setReisdagInput] = useState(() => (stage ? (stage.reisdagToelageCents / 100).toFixed(2).replace('.', ',') : ''))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const klasStudents = useMemo(() => allInStage.filter((s) => s.klas === klas), [allInStage, klas])
@@ -89,10 +91,21 @@ export function InviteStudents() {
     setBudgetInput((finalCents / 100).toFixed(2).replace('.', ','))
   }
 
+  const commitReisdag = () => {
+    const cents = parseCentsInput(reisdagInput)
+    const finalCents = cents >= 0 && reisdagInput.trim() !== '' ? cents : stage.reisdagToelageCents
+    if (reisdagInput.trim() !== '') updateStageReisdagToelage(stage.id, cents)
+    setReisdagInput((finalCents / 100).toFixed(2).replace('.', ','))
+  }
+
   const dagToelage = formatCents(stage.dagToelageCents)
+  const reisdagToelage = formatCents(stage.reisdagToelageCents)
+  const middenDagen = stage.aantalDagen - 2
   const end = stage.startDatum ? stageEndDate(stage.startDatum, stage.aantalDagen) : null
   const periodNote = stage.startDatum
-    ? `${stage.aantalDagen} stagedagen, van ${formatShortDate(stage.startDatum)} tot ${formatShortDateYear(end!)}. De app rekent de dagtoelage van ${dagToelage} per dag af binnen deze periode; bonnetjes van buiten de periode worden apart gemarkeerd.`
+    ? middenDagen > 0
+      ? `${stage.aantalDagen} stagedagen, van ${formatShortDate(stage.startDatum)} tot ${formatShortDateYear(end!)}. De eerste en laatste stagedag (reisdagen) tellen voor ${reisdagToelage} per dag, de ${middenDagen} dagen ertussen voor ${dagToelage} per dag; bonnetjes van buiten de periode worden apart gemarkeerd.`
+      : `${stage.aantalDagen} stagedagen, van ${formatShortDate(stage.startDatum)} tot ${formatShortDateYear(end!)} — bij zo weinig dagen tellen ze allemaal als reisdag, voor ${reisdagToelage} per dag; bonnetjes van buiten de periode worden apart gemarkeerd.`
     : `Aantal dagen staat op ${stage.aantalDagen} (totaalbudget ${formatCents(stage.totaalBudgetCents)}), maar er is nog geen eerste stagedag gekozen — vul hierboven ook een datum in om de periode vast te leggen. Zolang die ontbreekt, kunnen leerlingen al bonnetjes toevoegen — die krijgen de datum van de foto en schuiven mee zodra jij de periode invult.`
 
   const opened = klasStudents.filter((s) => s.linkGeopend).length
@@ -160,6 +173,20 @@ export function InviteStudents() {
               <div className="flex flex-col gap-1.5">
                 <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45">dagtoelage</div>
                 <div className="text-sm font-semibold py-2">{dagToelage} / dag</div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="text-[11.5px] font-semibold tracking-[.4px] uppercase text-black/45">toelage reisdag (eerste/laatste)</div>
+                <div className="flex items-center gap-1.5 border border-black/[.16] rounded-[9px] px-2.5 py-2 bg-white">
+                  <span className="text-sm font-semibold text-black/45">€</span>
+                  <input
+                    value={reisdagInput}
+                    onChange={(e) => setReisdagInput(e.target.value)}
+                    onBlur={commitReisdag}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                    inputMode="decimal"
+                    className="text-sm font-semibold outline-none w-[70px] bg-transparent"
+                  />
+                </div>
               </div>
             </div>
             <div className="text-[12.5px] leading-[1.55] text-black/50">{periodNote}</div>
@@ -232,7 +259,7 @@ export function InviteStudents() {
                   {namesToImport.length} leerlingen toevoegen aan {klas}
                 </button>
                 <div className="text-[12.5px] text-black/50">
-                  elk met {formatCents(stage.totaalBudgetCents)} totaal en {dagToelage} per dag
+                  elk met {formatCents(stage.totaalBudgetCents)} totaal, {dagToelage}/dag en {reisdagToelage} op de eerste/laatste dag
                 </div>
               </div>
             </div>

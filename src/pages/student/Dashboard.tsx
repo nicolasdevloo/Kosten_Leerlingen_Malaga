@@ -5,6 +5,7 @@ import {
   currentStageDay,
   incompleteReceipts,
   pendingReceipts,
+  todayAllowanceCents,
   todaySpent,
   totalSpent
 } from '@/data/selectors'
@@ -23,10 +24,11 @@ export function Dashboard() {
   const dayNum = currentStageDay(stage)
   const spentToday = todaySpent(receipts)
   const spentTotal = totalSpent(receipts)
-  const dayLeft = stage.dagToelageCents - spentToday
+  const dayAllowance = todayAllowanceCents(stage)
+  const dayLeft = dayAllowance - spentToday
   const totalLeft = stage.totaalBudgetCents - spentTotal
   const over = dayLeft < 0
-  const dayPct = Math.min(100, (spentToday / stage.dagToelageCents) * 100)
+  const dayPct = Math.min(100, (spentToday / dayAllowance) * 100)
   const totalPct = Math.min(100, (spentTotal / stage.totaalBudgetCents) * 100)
   const pending = pendingReceipts(receipts)
   const gaps = incompleteReceipts(receipts)
@@ -72,7 +74,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="text-right text-[12.5px] leading-[1.45] text-black/50 whitespace-pre-line">
-            {over ? `over je toelage\nvan €30` : `van €30,00\ntoelage`}
+            {over ? `over je toelage\nvan ${formatCents(dayAllowance)}` : `van ${formatCents(dayAllowance)}\ntoelage`}
           </div>
         </div>
         <ProgressBar pct={dayPct} color={over ? 'oklch(0.70 0.15 62)' : 'oklch(0.55 0.15 255)'} height={10} />

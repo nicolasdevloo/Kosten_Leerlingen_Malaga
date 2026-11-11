@@ -8,6 +8,18 @@ import { todayIso } from '@/lib/date'
 import type { LinkPayload } from '@/lib/linkPayload'
 import type { DossierExport } from '@/lib/dossierExport'
 
+/**
+ * De dagtoelage voor de gewone stagedagen: wat overblijft van het totaalbudget na de twee
+ * reisdagen, gelijk verdeeld over de dagen ertussen. Bij 2 dagen of minder zijn ze allemaal
+ * reisdagen, dan is er geen "gewone dag" meer en valt de gewone toelage terug op het gemiddelde.
+ */
+function computeDagToelage(totaalBudgetCents: number, reisdagToelageCents: number, aantalDagen: number): number {
+  if (aantalDagen > 2) {
+    return Math.max(0, Math.round((totaalBudgetCents - 2 * reisdagToelageCents) / (aantalDagen - 2)))
+  }
+  return Math.max(0, Math.round(totaalBudgetCents / Math.max(1, aantalDagen)))
+}
+
 interface AppState {
   stages: Record<string, Stage>
   students: Record<string, Student>
@@ -31,6 +43,7 @@ interface AppState {
 
   updateStagePeriod: (stageId: string, startDatum: string | null, aantalDagen: number) => void
   updateStageBudget: (stageId: string, totaalBudgetCents: number) => void
+  updateStageReisdagToelage: (stageId: string, reisdagToelageCents: number) => void
   importStudents: (stageId: string, klas: KlasCode, namen: string[]) => Student[]
   regenerateToken: (studentId: string) => string
   deleteStudent: (studentId: string) => void
@@ -123,7 +136,8 @@ export const useStore = create<AppState>()(
       },
 
       // Het totaalbudget is het echte, vaste bedrag (bv. een Erasmus+-subsidie); de dagtoelage is
-      // daar gewoon een afgeleide van (totaal / aantal dagen), vooral om per dag te waarschuwen.
+      // daar gewoon een afgeleide van. De eerste en laatste stagedag (reisdagen) krijgen hun eigen,
+      // meestal lagere toelage; de rest van het totaal wordt gelijk verdeeld over de dagen ertussen.
       updateStagePeriod: (stageId, startDatum, aantalDagen) => {
         set((state) => {
           const stage = state.stages[stageId]
@@ -131,7 +145,12 @@ export const useStore = create<AppState>()(
           return {
             stages: {
               ...state.stages,
-              [stageId]: { ...stage, startDatum, aantalDagen, dagToelageCents: Math.round(stage.totaalBudgetCents / aantalDagen) }
+              [stageId]: {
+                ...stage,
+                startDatum,
+                aantalDagen,
+                dagToelageCents: computeDagToelage(stage.totaalBudgetCents, stage.reisdagToelageCents, aantalDagen)
+              }
             }
           }
         })
@@ -144,7 +163,28 @@ export const useStore = create<AppState>()(
           return {
             stages: {
               ...state.stages,
-              [stageId]: { ...stage, totaalBudgetCents, dagToelageCents: Math.round(totaalBudgetCents / stage.aantalDagen) }
+              [stageId]: {
+                ...stage,
+                totaalBudgetCents,
+                dagToelageCents: computeDagToelage(totaalBudgetCents, stage.reisdagToelageCents, stage.aantalDagen)
+              }
+            }
+          }
+        })
+      },
+
+      updateStageReisdagToelage: (stageId, reisdagToelageCents) => {
+        set((state) => {
+          const stage = state.stages[stageId]
+          if (!stage) return state
+          return {
+            stages: {
+              ...state.stages,
+              [stageId]: {
+                ...stage,
+                reisdagToelageCents,
+                dagToelageCents: computeDagToelage(stage.totaalBudgetCents, reisdagToelageCents, stage.aantalDagen)
+              }
             }
           }
         })

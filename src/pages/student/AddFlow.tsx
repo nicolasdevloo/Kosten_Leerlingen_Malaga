@@ -283,7 +283,7 @@ export function AddFlow() {
           <div className="text-2xl font-extrabold tracking-[-0.6px] text-white">Je gaat over je dagtoelage</div>
           <div className="text-[14.5px] leading-[1.6] text-white/70">
             Met deze {formatCents(amountCents)} kom je {formatCents(check.overDayCents)} boven je dagtoelage van{' '}
-            {formatCents(stage.dagToelageCents)}. Dat mag — het gaat wel van je totaal van {formatCents(stage.totaalBudgetCents)} af.
+            {formatCents(check.dayAllowanceCents)}. Dat mag — het gaat wel van je totaal van {formatCents(stage.totaalBudgetCents)} af.
           </div>
           <div className="bg-white/[.07] rounded-xl p-4 flex flex-col gap-2.5">
             <div className="flex justify-between text-[13.5px] text-white/70">

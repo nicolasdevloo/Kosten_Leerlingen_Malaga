@@ -12,6 +12,7 @@ export interface SeedResult {
  */
 export function buildSeed(): SeedResult {
   const dagToelageCents = 3000
+  const reisdagToelageCents = 1500
   const aantalDagen = 6
   const stage: Stage = {
     id: 'stage_malaga2027',
@@ -19,8 +20,9 @@ export function buildSeed(): SeedResult {
     bestemming: 'Málaga',
     school: 'Burgerschool Roeselare',
     begeleider: 'meneer Devloo',
-    totaalBudgetCents: dagToelageCents * aantalDagen,
+    totaalBudgetCents: reisdagToelageCents * 2 + dagToelageCents * (aantalDagen - 2),
     dagToelageCents,
+    reisdagToelageCents,
     startDatum: null,
     aantalDagen
   }

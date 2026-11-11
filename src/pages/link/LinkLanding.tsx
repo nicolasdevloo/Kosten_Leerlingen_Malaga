@@ -147,6 +147,10 @@ export function LinkLanding() {
           <div className="font-bold">{formatCents(stage.dagToelageCents)}</div>
         </div>
         <div className="flex justify-between text-[13px]">
+          <div className="text-black/50">Toelage op aankomst-/vertrekdag</div>
+          <div className="font-bold">{formatCents(stage.reisdagToelageCents)}</div>
+        </div>
+        <div className="flex justify-between text-[13px]">
           <div className="text-black/50">Periode</div>
           <div className="font-bold text-right">{periode}</div>
         </div>
