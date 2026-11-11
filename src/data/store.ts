@@ -290,6 +290,17 @@ export const useStore = create<AppState>()(
           const receipts: Record<string, Bonnetje> = {}
           for (const r of seed.receipts) receipts[r.id] = r
           Object.assign(state, { stages, students, receipts })
+        } else if (state) {
+          // Migratie voor toestellen die hun stage al lokaal bewaarden vóór de reisdagtoelage
+          // bestond: zonder dit blijft dat veld undefined en telt een reisdag nergens mee.
+          const stages: Record<string, Stage> = {}
+          for (const [id, stage] of Object.entries(state.stages)) {
+            stages[id] =
+              typeof stage.reisdagToelageCents === 'number'
+                ? stage
+                : { ...stage, reisdagToelageCents: Math.round(stage.dagToelageCents / 2) }
+          }
+          state.stages = stages
         }
         state?.setHydrated()
       }
