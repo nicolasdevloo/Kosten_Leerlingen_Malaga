@@ -10,12 +10,6 @@ import { STAGE_ID } from '@/data/seed'
 
 type Step = 'confirm' | 'wrong' | 'addHome'
 
-// Eenmalig vastleggen bij het laden van de module, vóór we de href ooit naar een blob wisselen —
-// anders zou een tweede bezoek aan deze pagina de (dan al ingetrokken) blob van de vorige keer
-// opnieuw proberen op te vragen in plaats van het echte, originele manifest.
-const originalManifestHref =
-  typeof document !== 'undefined' ? document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href : undefined
-
 export function LinkLanding() {
   const { token: routeParam } = useParams<{ token: string }>()
   const navigate = useNavigate()
@@ -26,9 +20,10 @@ export function LinkLanding() {
   const [step, setStep] = useState<Step>('confirm')
   // Op iPhone krijgt een beginscherm-icoon soms een eigen, volledig gescheiden opslag die niets
   // deelt met Safari — een bevestiging daar is dan nooit zichtbaar in het icoon, hoe vaak je het
-  // ook opent. Daarom laten we het icoon altijd rechtstreeks naar deze persoonlijke link openen
-  // (zie de manifest-wissel hieronder) en herkennen we hier of we al als icoon draaien, zodat een
-  // leerling nooit meer dan die ene keer moet bevestigen.
+  // ook opent. We kunnen vanuit JS niet betrouwbaar afdwingen welke URL dat icoon opent (iOS leest
+  // het manifest op zijn eigen moment, niet noodzakelijk wat wij net via JS wisselden), maar we
+  // herkennen hier wel of we al als icoon draaien, zodat een leerling — als het icoon toevallig
+  // wél zijn eigen link opent — nooit meer dan die ene keer moet bevestigen.
   const isStandalone = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
 
   // Echte leerlinglinks bevatten naam, klas en de stage-instellingen rechtstreeks (geen server nodig).
@@ -40,31 +35,6 @@ export function LinkLanding() {
     if (payload) provisionFromLink(payload)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeParam])
-
-  // Eén statisch manifest.webmanifest kan maar één start_url voor iedereen bevatten. Zolang de
-  // "zet op beginscherm"-stappen op het scherm staan, wisselen we de href van de manifest-link om
-  // naar een variant met déze leerling z'n eigen link als start_url — zo opent het icoon straks
-  // altijd rechtstreeks die link (mét naam, klas en stage-gegevens erin) in plaats van een lege
-  // /app-route die niets kan terugvinden als de opslag niet gedeeld bleek met Safari.
-  useEffect(() => {
-    if (step !== 'addHome' || !originalManifestHref) return
-    const manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
-    if (!manifestLink) return
-    let objectUrl: string | undefined
-    fetch(originalManifestHref)
-      .then((res) => res.json())
-      .then((base) => {
-        const blob = new Blob([JSON.stringify({ ...base, start_url: `./#/y/${routeParam}` })], {
-          type: 'application/manifest+json'
-        })
-        objectUrl = URL.createObjectURL(blob)
-        manifestLink.setAttribute('href', objectUrl)
-      })
-      .catch(() => {})
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [step, routeParam])
 
   // Val meteen terug op de gegevens uit de link zelf (i.p.v. te wachten op de effect hierboven),
   // zodat een geldige link nooit eerst even "ongeldig" flitst voor hij verwerkt is.
