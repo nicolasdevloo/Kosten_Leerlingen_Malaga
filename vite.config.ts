@@ -21,7 +21,10 @@ export default defineConfig({
         theme_color: '#F7F6F3',
         background_color: '#F7F6F3',
         display: 'standalone',
-        start_url: '.',
+        // Het "beginscherm toevoegen"-stappenplan wordt alleen aan leerlingen getoond (nooit aan
+        // de leerkracht), dus het icoon moet altijd in de leerling-app openen — niet op de kale
+        // root, die (zonder sessie) het leerkrachten-slot toont.
+        start_url: './#/app',
         scope: '.',
         icons: [
           { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
