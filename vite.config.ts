@@ -12,6 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'icon.svg'],
       manifest: {
         name: 'Stagekosten Málaga',
