@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Bonnetje, Categorie, KlasCode, Stage, Student } from '@/types'
-import { buildSeed } from '@/data/seed'
+import { buildSeed, STAGE_ID } from '@/data/seed'
 import { idbStorage } from '@/data/idbStorage'
 import { generateId, generateToken } from '@/lib/token'
 import { todayIso } from '@/lib/date'
@@ -255,7 +255,10 @@ export const useStore = create<AppState>()(
       provisionFromLink: (payload) => {
         // Bootstrap voor een vers toestel: de link zelf bevat alles wat nodig is, er is geen
         // server om het bij op te vragen. Bestaat het lokaal al (zelfde link nogmaals geopend),
-        // dan blijven de eigen bonnetjes en indieningsstatus van de leerling gewoon staan.
+        // dan blijven de eigen bonnetjes en indieningsstatus van de leerling gewoon staan. De
+        // stage zelf wordt nooit uit de link overgenomen (zie STAGE_ID): die ene, altijd-aanwezige
+        // stage staat al vast bij het opstarten, en zo kan een oude link ook nooit een latere
+        // aanpassing van de leerkracht in het dashboard terugdraaien.
         const studentId = `student_${payload.token}`
         set((state) => {
           const existing = state.students[studentId]
@@ -263,7 +266,7 @@ export const useStore = create<AppState>()(
             ? { ...existing, naam: payload.naam, klas: payload.klas }
             : {
                 id: studentId,
-                stageId: payload.stage.id,
+                stageId: STAGE_ID,
                 naam: payload.naam,
                 klas: payload.klas,
                 token: payload.token,
@@ -271,7 +274,6 @@ export const useStore = create<AppState>()(
                 ingediend: false
               }
           return {
-            stages: { ...state.stages, [payload.stage.id]: payload.stage },
             students: { ...state.students, [studentId]: student }
           }
         })
@@ -305,9 +307,9 @@ export const useStore = create<AppState>()(
       version: 1,
       migrate: (persisted) => {
         const state = persisted as { stages?: Record<string, Stage> } | undefined
-        const stage = state?.stages?.['stage_malaga2027']
+        const stage = state?.stages?.[STAGE_ID]
         if (state?.stages && stage) {
-          state.stages['stage_malaga2027'] = {
+          state.stages[STAGE_ID] = {
             ...stage,
             startDatum: '2027-01-24',
             aantalDagen: 14,

@@ -1,5 +1,9 @@
 import type { Bonnetje, Stage, Student } from '@/types'
 
+// Er is maar één stage (Málaga 2027) en de instellingen liggen vast — leerlinglinks hoeven deze
+// gegevens dus niet zelf mee te dragen, enkel te verwijzen naar deze ene, altijd-aanwezige stage.
+export const STAGE_ID = 'stage_malaga2027'
+
 export interface SeedResult {
   stage: Stage
   students: Student[]
@@ -17,7 +21,7 @@ export function buildSeed(): SeedResult {
   const reisdagToelageCents = 1500
   const aantalDagen = 14
   const stage: Stage = {
-    id: 'stage_malaga2027',
+    id: STAGE_ID,
     naam: 'Málaga 2027',
     bestemming: 'Málaga',
     school: 'Burgerschool Roeselare',

@@ -78,7 +78,7 @@ export function InviteStudents() {
   }
 
   const copyLink = (s: (typeof klasStudents)[number]) => {
-    navigator.clipboard.writeText(buildStudentLink(s.token, s.naam, s.klas, stage)).then(() => {
+    navigator.clipboard.writeText(buildStudentLink(s.token, s.naam, s.klas)).then(() => {
       setCopiedId(s.id)
       setTimeout(() => setCopiedId((id) => (id === s.id ? null : id)), 1500)
     })
@@ -347,7 +347,7 @@ export function InviteStudents() {
       {qrStudent && stage && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setQrStudent(null)}>
           <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-            <QrCode value={buildStudentLink(qrStudent.token, qrStudent.naam, qrStudent.klas, stage)} size={220} />
+            <QrCode value={buildStudentLink(qrStudent.token, qrStudent.naam, qrStudent.klas)} size={220} />
             <div className="text-base font-bold">{qrStudent.naam}</div>
             <div className="text-sm text-black/50">{qrStudent.klas}</div>
             <button onClick={() => setQrStudent(null)} className="mt-2 text-sm font-semibold text-accent-dark">

@@ -6,6 +6,7 @@ import { formatShortDate, formatShortDateYear, stageEndDate } from '@/lib/date'
 import { capitalizeFirst } from '@/lib/text'
 import { decodeLinkPayload } from '@/lib/linkPayload'
 import { detectPlatform } from '@/lib/platform'
+import { STAGE_ID } from '@/data/seed'
 
 type Step = 'confirm' | 'wrong' | 'addHome'
 
@@ -73,7 +74,7 @@ export function LinkLanding() {
     (payload
       ? {
           id: `student_${payload.token}`,
-          stageId: payload.stage.id,
+          stageId: STAGE_ID,
           naam: payload.naam,
           klas: payload.klas,
           token: payload.token,
@@ -81,7 +82,7 @@ export function LinkLanding() {
           ingediend: false
         }
       : undefined)
-  const stage = student ? stages[student.stageId] ?? payload?.stage : undefined
+  const stage = student ? stages[student.stageId] : undefined
 
   // Draait dit al als icoon, en heeft dit toestel zelf al eens bevestigd (ongeacht wat er in
   // Safari gebeurde), dan meteen naar het dashboard — niet elke keer opnieuw "Ja, ik ben ..." tonen.
