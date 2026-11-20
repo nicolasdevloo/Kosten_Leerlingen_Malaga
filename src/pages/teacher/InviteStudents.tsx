@@ -8,6 +8,7 @@ import type { KlasCode } from '@/types'
 import { Chip } from '@/components/ui/Chip'
 import { Badge } from '@/components/ui/Badge'
 import { QrCode } from '@/components/ui/QrCode'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { buildStudentLink } from '@/lib/linkPayload'
 
 function parseNamesFromFile(text: string): string[] {
@@ -34,6 +35,7 @@ export function InviteStudents() {
   const [dragOver, setDragOver] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [qrStudent, setQrStudent] = useState<{ naam: string; klas: KlasCode; token: string } | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; naam: string } | null>(null)
   const [budgetInput, setBudgetInput] = useState(() => (stage ? (stage.totaalBudgetCents / 100).toFixed(2).replace('.', ',') : ''))
   const [reisdagInput, setReisdagInput] = useState(() => (stage ? (stage.reisdagToelageCents / 100).toFixed(2).replace('.', ',') : ''))
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -71,10 +73,10 @@ export function InviteStudents() {
     setQuickName('')
   }
 
-  const remove = (studentId: string, naam: string) => {
-    if (window.confirm(`${naam} verwijderen? Zijn bonnetjes en link verdwijnen mee. Dit kan niet ongedaan gemaakt worden.`)) {
-      deleteStudent(studentId)
-    }
+  const confirmRemove = () => {
+    if (!pendingDelete) return
+    deleteStudent(pendingDelete.id)
+    setPendingDelete(null)
   }
 
   const copyLink = (s: (typeof klasStudents)[number]) => {
@@ -311,7 +313,7 @@ export function InviteStudents() {
                               Opnieuw
                             </button>
                           )}
-                          <button onClick={() => remove(s.id, s.naam)} className="text-black/40 hover:text-red-600">
+                          <button onClick={() => setPendingDelete({ id: s.id, naam: s.naam })} className="text-black/40 hover:text-red-600">
                             Verwijderen
                           </button>
                         </div>
@@ -356,6 +358,14 @@ export function InviteStudents() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={pendingDelete ? `${pendingDelete.naam} verwijderen?` : ''}
+        message="Zijn bonnetjes en link verdwijnen mee. Dit kan niet ongedaan gemaakt worden."
+        onConfirm={confirmRemove}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import type { Categorie } from '@/types'
 import { CATEGORIEEN } from '@/types'
 import { Chip } from '@/components/ui/Chip'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export function ReceiptFix() {
   const { id } = useParams<{ id: string }>()
@@ -19,6 +20,7 @@ export function ReceiptFix() {
   const [amountInput, setAmountInput] = useState(receipt ? (receipt.bedragCents / 100).toFixed(2).replace('.', ',') : '')
   const [note, setNote] = useState(receipt?.omschrijving ?? '')
   const [lightbox, setLightbox] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (!receipt) return <Navigate to="/app/bonnetjes" replace />
 
@@ -36,10 +38,8 @@ export function ReceiptFix() {
   }
 
   const remove = () => {
-    if (window.confirm('Dit bonnetje verwijderen? Dit kan niet ongedaan gemaakt worden.')) {
-      deleteReceipt(receipt.id)
-      navigate('/app/bonnetjes')
-    }
+    deleteReceipt(receipt.id)
+    navigate('/app/bonnetjes')
   }
 
   return (
@@ -99,9 +99,17 @@ export function ReceiptFix() {
       <Button variant="primary" full onClick={save} disabled={!categorie || amountCents <= 0} className="!py-4 rounded-full">
         Wijzigingen opslaan
       </Button>
-      <button onClick={remove} className="text-sm font-semibold text-red-600 text-center py-2">
+      <button onClick={() => setConfirmDelete(true)} className="text-sm font-semibold text-red-600 text-center py-2">
         Bonnetje verwijderen
       </button>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Bonnetje verwijderen?"
+        message="Dit kan niet ongedaan gemaakt worden."
+        onConfirm={remove}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {lightbox && receipt.fotoDataUrl && (
         <div
