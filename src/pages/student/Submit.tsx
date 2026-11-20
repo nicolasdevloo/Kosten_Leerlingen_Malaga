@@ -1,19 +1,18 @@
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 import { useStore, studentReceipts } from '@/data/store'
 import { incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
-import { buildDossierExport, dossierExportFilename } from '@/lib/dossierExport'
 import { shareOrDownloadFile } from '@/lib/shareFile'
+import { DossierContent } from '@/pages/dossier/DossierContent'
 import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import type { Student, Stage, Bonnetje } from '@/types'
+import type { Student } from '@/types'
 
-async function shareDossierFile(student: Student, stage: Stage, receipts: Bonnetje[]) {
-  const json = JSON.stringify(buildDossierExport(student, stage, receipts), null, 2)
-  const filename = dossierExportFilename(student.naam)
-  const file = new File([json], filename, { type: 'application/json' })
-  await shareOrDownloadFile(file, `Stagekosten — ${student.naam}`)
+async function shareDossierPdf(el: HTMLElement, student: Student) {
+  const { elementToPdfFile, dossierPdfFilename } = await import('@/lib/pdfExport')
+  const file = await elementToPdfFile(el, dossierPdfFilename(student.naam))
+  await shareOrDownloadFile(file, `Kostendossier — ${student.naam}`)
 }
 
 function CheckDot({ done = true }: { done?: boolean }) {
@@ -28,10 +27,23 @@ export function Submit() {
   const { student, stage } = useSession()
   const receipts = useStore((s) => (student ? studentReceipts(s, student.id) : []))
   const submitDossier = useStore((s) => s.submitDossier)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [sharing, setSharing] = useState(false)
   if (!student || !stage) return null
 
   const gaps = incompleteReceipts(receipts)
   const hasGaps = gaps.length > 0
+
+  const send = async () => {
+    if (!contentRef.current || sharing) return
+    setSharing(true)
+    try {
+      await shareDossierPdf(contentRef.current, student)
+      submitDossier(student.id)
+    } finally {
+      setSharing(false)
+    }
+  }
 
   return (
     <div className="px-5 pt-14 pb-4 flex flex-col gap-[15px]">
@@ -92,25 +104,31 @@ export function Submit() {
             <div className="text-[12.5px] leading-[1.5] text-black/50">
               Er is geen automatische verzending — jij stuurt dit zelf door, bv. via WhatsApp of e-mail.
             </div>
+            <button
+              onClick={send}
+              disabled={sharing}
+              className="bg-ink rounded-full py-3.5 text-center text-sm font-bold text-white disabled:opacity-60"
+            >
+              {sharing ? 'Dossier wordt gemaakt…' : student.ingediend ? 'Dossier opnieuw versturen' : 'Dossier versturen'}
+            </button>
             <Link
               to={`/dossier/${student.id}`}
               target="_blank"
               rel="noreferrer"
-              onClick={() => submitDossier(student.id)}
-              className="bg-ink rounded-full py-3.5 text-center text-sm font-bold text-white"
+              className="text-center text-[12.5px] font-semibold text-black/45 underline decoration-dotted"
             >
-              PDF bekijken en delen
+              Bekijk het dossier eerst
             </Link>
-            <Button variant="outline" full onClick={() => shareDossierFile(student, stage, receipts)} className="!py-3.5 rounded-full">
-              {student.ingediend ? 'Dossierbestand opnieuw delen' : 'Dossierbestand delen'}
-            </Button>
-            <div className="text-[11.5px] leading-[1.45] text-black/40">
-              De PDF is voor de Erasmus+-papieren — op die pagina staat een knop om ze meteen te delen. Het dossierbestand (JSON) is
-              enkel nodig als {stage.begeleider} jouw bonnetjes ook in zijn dashboard wil importeren.
-            </div>
           </div>
         </>
       )}
+
+      {/* Buiten beeld gerenderd: enkel om naar een PDF te rasteren bij "Dossier versturen" hierboven. */}
+      <div className="fixed top-0 -left-[9999px]" aria-hidden>
+        <div ref={contentRef}>
+          <DossierContent student={student} stage={stage} receipts={receipts} />
+        </div>
+      </div>
     </div>
   )
 }
