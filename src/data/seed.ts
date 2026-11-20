@@ -4,6 +4,9 @@ import type { Bonnetje, Stage, Student } from '@/types'
 // gegevens dus niet zelf mee te dragen, enkel te verwijzen naar deze ene, altijd-aanwezige stage.
 export const STAGE_ID = 'stage_malaga2027'
 
+// Vast e-mailadres waar "Dossier versturen" automatisch naartoe adresseert.
+export const TEACHER_EMAIL = 'Nicolas.devloo@sint-michiel.be'
+
 export interface SeedResult {
   stage: Stage
   students: Student[]
@@ -26,6 +29,7 @@ export function buildSeed(): SeedResult {
     bestemming: 'Málaga',
     school: 'Burgerschool Roeselare',
     begeleider: 'meneer Devloo',
+    begeleiderEmail: TEACHER_EMAIL,
     totaalBudgetCents: reisdagToelageCents * 2 + dagToelageCents * (aantalDagen - 2),
     dagToelageCents,
     reisdagToelageCents,

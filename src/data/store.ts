@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Bonnetje, Categorie, KlasCode, Stage, Student } from '@/types'
-import { buildSeed, STAGE_ID } from '@/data/seed'
+import { buildSeed, STAGE_ID, TEACHER_EMAIL } from '@/data/seed'
 import { idbStorage } from '@/data/idbStorage'
 import { generateId, generateToken } from '@/lib/token'
 import { todayIso } from '@/lib/date'
@@ -302,9 +302,10 @@ export const useStore = create<AppState>()(
       storage: createJSONStorage(() => idbStorage),
       // Versie 1: zet de echte, definitieve stage-gegevens voor Málaga 2027 vast (24/01–6/02/2027,
       // €390 totaal, €15 op de reisdagen, €30 op de dagen ertussen) op elk toestel dat de stage al
-      // lokaal had — inclusief toestellen die nog van vóór de reisdagtoelage dateren. Draait precies
-      // één keer per toestel; latere aanpassingen door de leerkracht via het dashboard blijven staan.
-      version: 1,
+      // lokaal had — inclusief toestellen die nog van vóór de reisdagtoelage dateren.
+      // Versie 2: voegt begeleiderEmail toe (voor het automatisch geadresseerde "Dossier versturen").
+      // Draait één keer per toestel per versie; latere aanpassingen door de leerkracht blijven staan.
+      version: 2,
       migrate: (persisted) => {
         const state = persisted as { stages?: Record<string, Stage> } | undefined
         const stage = state?.stages?.[STAGE_ID]
@@ -315,7 +316,8 @@ export const useStore = create<AppState>()(
             aantalDagen: 14,
             dagToelageCents: 3000,
             reisdagToelageCents: 1500,
-            totaalBudgetCents: 39000
+            totaalBudgetCents: 39000,
+            begeleiderEmail: TEACHER_EMAIL
           }
         }
         return state

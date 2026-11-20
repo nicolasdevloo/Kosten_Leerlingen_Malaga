@@ -13,6 +13,7 @@ export interface Stage {
   bestemming: string
   school: string
   begeleider: string
+  begeleiderEmail: string
   totaalBudgetCents: number
   /** Dagtoelage op de gewone stagedagen (dus niet de eerste/laatste, de reisdagen). */
   dagToelageCents: number

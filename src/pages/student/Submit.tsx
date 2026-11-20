@@ -4,15 +4,24 @@ import { useSession } from '@/hooks/useSession'
 import { useStore, studentReceipts } from '@/data/store'
 import { incompleteReceipts, totalSpent } from '@/data/selectors'
 import { formatCents } from '@/lib/money'
-import { shareOrDownloadFile } from '@/lib/shareFile'
+import { downloadFile } from '@/lib/shareFile'
 import { DossierContent } from '@/pages/dossier/DossierContent'
 import { Card } from '@/components/ui/Card'
-import type { Student } from '@/types'
+import type { Student, Stage } from '@/types'
 
-async function shareDossierPdf(el: HTMLElement, student: Student) {
+// Een mailto-link kan geen bijlage meesturen — dat kan geen enkele browser. We bewaren de PDF dus
+// eerst rechtstreeks op het toestel en openen meteen daarna een al geadresseerde, ingevulde mail;
+// de leerling hoeft dan alleen nog dat ene, net-bewaarde bestand aan te tikken als bijlage.
+async function sendDossierByMail(el: HTMLElement, student: Student, stage: Stage) {
   const { elementToPdfFile, dossierPdfFilename } = await import('@/lib/pdfExport')
-  const file = await elementToPdfFile(el, dossierPdfFilename(student.naam))
-  await shareOrDownloadFile(file, `Kostendossier — ${student.naam}`)
+  const filename = dossierPdfFilename(student.naam)
+  const file = await elementToPdfFile(el, filename)
+  downloadFile(file)
+  const subject = encodeURIComponent(`Kostendossier — ${student.naam}`)
+  const body = encodeURIComponent(
+    `Dag ${stage.begeleider},\n\nHierbij mijn kostendossier.\n\nHet bestand "${filename}" is net bewaard op dit toestel — voeg het hier toe als bijlage (via het paperclip-icoon) voor je verstuurt.\n\n${student.naam}`
+  )
+  window.location.href = `mailto:${stage.begeleiderEmail}?subject=${subject}&body=${body}`
 }
 
 function CheckDot({ done = true }: { done?: boolean }) {
@@ -38,7 +47,7 @@ export function Submit() {
     if (!contentRef.current || sharing) return
     setSharing(true)
     try {
-      await shareDossierPdf(contentRef.current, student)
+      await sendDossierByMail(contentRef.current, student, stage)
       submitDossier(student.id)
     } finally {
       setSharing(false)
@@ -102,7 +111,8 @@ export function Submit() {
           <div className="bg-white rounded-2xl p-[18px] flex flex-col gap-3">
             <div className="text-[13.5px] font-semibold">Bezorg je dossier aan {stage.begeleider}</div>
             <div className="text-[12.5px] leading-[1.5] text-black/50">
-              Er is geen automatische verzending — jij stuurt dit zelf door, bv. via WhatsApp of e-mail.
+              De PDF wordt bewaard op je toestel en je e-mail-app opent meteen, al geadresseerd aan {stage.begeleider}. Je moet enkel
+              nog dat bestand als bijlage toevoegen voor je verstuurt.
             </div>
             <button
               onClick={send}
